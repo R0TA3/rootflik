@@ -1,50 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>RootFlik</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-            color: white;
-            text-align: center;
-        }
-        header {
-            padding: 100px 20px;
-        }
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 20px;
-        }
-        p {
-            font-size: 1.2rem;
-            opacity: 0.8;
-        }
-        .btn {
-            display: inline-block;
-            margin-top: 30px;
-            padding: 12px 30px;
-            background: #3b82f6;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            transition: 0.3s;
-        }
-        .btn:hover {
-            background: #2563eb;
-            transform: scale(1.05);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RootFlik</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: radial-gradient(circle at top left, #0f172a, #020617);
+    color: white;
+    overflow-x: hidden;
+}
+
+header {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 3.5rem;
+    background: linear-gradient(90deg, #38bdf8, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { text-shadow: 0 0 10px #38bdf8; }
+    to { text-shadow: 0 0 25px #818cf8; }
+}
+
+p {
+    margin-top: 20px;
+    font-size: 1.2rem;
+    opacity: 0.8;
+}
+
+.btn {
+    margin-top: 30px;
+    padding: 12px 30px;
+    border-radius: 30px;
+    border: none;
+    background: linear-gradient(90deg, #2563eb, #7c3aed);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.4s;
+}
+
+.btn:hover {
+    transform: scale(1.1);
+}
+
+section {
+    padding: 100px 10%;
+    text-align: center;
+}
+
+.cards {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+.card {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 30px;
+    width: 280px;
+    transition: 0.4s;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    background: rgba(255,255,255,0.1);
+}
+
+footer {
+    padding: 40px;
+    text-align: center;
+    background: #0f172a;
+    margin-top: 50px;
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+</style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to RootFlik</h1>
-        <p>Innovating the Future with Technology & Security</p>
-        <a href="#" class="btn">Get Started</a>
-    </header>
+
+<header>
+    <h1>RootFlik</h1>
+    <p>Innovating Cyber Intelligence & Future Technology</p>
+    <button class="btn">Explore More</button>
+</header>
+
+<section>
+    <h2>Our Services</h2>
+    <div class="cards">
+        <div class="card">
+            <h3>Cyber Security</h3>
+            <p>Advanced penetration testing and digital defense solutions.</p>
+        </div>
+        <div class="card">
+            <h3>Cloud Solutions</h3>
+            <p>Secure cloud architecture & AWS infrastructure support.</p>
+        </div>
+        <div class="card">
+            <h3>AI Innovation</h3>
+            <p>Smart automation & AI-powered system development.</p>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>About RootFlik</h2>
+    <p style="max-width:700px;margin:auto;margin-top:20px;">
+        RootFlik is a next-generation technology brand focused on cybersecurity,
+        ethical hacking, and intelligent system solutions. We build secure digital futures.
+    </p>
+</section>
+
+<footer>
+    © 2026 RootFlik. All Rights Reserved.
+</footer>
+
 </body>
 </html>
