@@ -1,224 +1,249 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Website</title>
+  <title>ROOTFLIK — Discover. Stream. Obsess.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      color: #333;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: #0a0a0a; color: #f5f5f5; font-family: 'Barlow Condensed', sans-serif; overflow-x: hidden; }
 
     /* NAV */
     nav {
-      background: #111;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 3rem;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, transparent 100%);
     }
-    nav .logo {
-      color: #e50914;
-      font-size: 1.5rem;
-      font-weight: bold;
-      text-decoration: none;
-    }
-    nav ul {
-      list-style: none;
-      display: flex;
-      gap: 1.5rem;
-    }
-    nav ul a {
-      color: #ccc;
-      text-decoration: none;
-      font-size: 0.95rem;
-    }
-    nav ul a:hover { color: white; }
+    .logo { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 0.08em; color: #E50914; text-decoration: none; text-shadow: 0 0 30px rgba(229,9,20,0.5); }
+    .logo span { color: #f5f5f5; }
+    .nav-links { list-style: none; display: flex; gap: 2rem; }
+    .nav-links a { font-family: 'Space Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: #888; text-decoration: none; transition: color 0.2s; }
+    .nav-links a:hover { color: #f5f5f5; }
+    .nav-cta { font-family: 'Space Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; background: #E50914; color: white; border: none; padding: 0.6rem 1.4rem; cursor: pointer; text-decoration: none; transition: background 0.2s; }
+    .nav-cta:hover { background: #ff1a25; }
 
     /* HERO */
-    .hero {
-      background: linear-gradient(135deg, #111 0%, #1a1a2e 100%);
-      color: white;
-      text-align: center;
-      padding: 5rem 2rem;
+    .unicorn-hero { position: relative; width: 100%; height: 100vh; overflow: hidden; }
+    .unicorn-scene-wrap { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .unicorn-scene-wrap > div { width: 100% !important; height: 100% !important; }
+
+    .hero-overlay {
+      position: absolute; inset: 0; z-index: 10;
+      display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+      padding: 0 4rem;
+      background: linear-gradient(to right, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.3) 60%, transparent 100%);
     }
-    .hero h1 { font-size: 3rem; margin-bottom: 1rem; }
-    .hero h1 span { color: #e50914; }
-    .hero p { font-size: 1.2rem; color: #aaa; margin-bottom: 2rem; }
-    .hero a {
-      background: #e50914;
-      color: white;
-      padding: 0.8rem 2rem;
-      text-decoration: none;
-      border-radius: 4px;
-      font-size: 1rem;
-      margin: 0.4rem;
-      display: inline-block;
-    }
-    .hero a:hover { background: #ff1a25; }
-    .hero a.outline {
-      background: transparent;
-      border: 1px solid #555;
-    }
-    .hero a.outline:hover { border-color: white; }
+    .hero-tag { font-family: 'Space Mono', monospace; font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase; color: #E50914; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.8rem; opacity: 0; animation: fadeUp 0.8s ease 0.3s forwards; }
+    .hero-tag::before { content: ''; width: 36px; height: 1px; background: #E50914; }
+    .hero-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(4.5rem, 11vw, 11rem); line-height: 0.9; color: #f5f5f5; opacity: 0; animation: fadeUp 0.9s ease 0.5s forwards; }
+    .hero-title .red { color: #E50914; }
+    .hero-title .outline { -webkit-text-stroke: 2px #f5f5f5; color: transparent; }
+    .hero-sub { font-size: 1.3rem; font-weight: 300; color: rgba(255,255,255,0.7); margin-top: 1.5rem; max-width: 440px; line-height: 1.6; opacity: 0; animation: fadeUp 0.9s ease 0.7s forwards; }
+    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2.5rem; opacity: 0; animation: fadeUp 0.9s ease 0.9s forwards; }
+
+    .btn-primary { font-family: 'Space Mono', monospace; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; background: #E50914; color: white; padding: 0.9rem 2.2rem; text-decoration: none; transition: background 0.2s, transform 0.15s; display: inline-block; }
+    .btn-primary:hover { background: #ff1a25; transform: translateY(-2px); }
+    .btn-ghost { font-family: 'Space Mono', monospace; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; background: transparent; color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.3); padding: 0.9rem 2.2rem; text-decoration: none; transition: border-color 0.2s, color 0.2s; display: inline-block; }
+    .btn-ghost:hover { border-color: white; color: white; }
+
+    .scroll-hint { position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; opacity: 0; animation: fadeIn 1s ease 1.5s forwards; }
+    .scroll-hint span { font-family: 'Space Mono', monospace; font-size: 0.58rem; letter-spacing: 0.25em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+    .scroll-line { width: 1px; height: 40px; background: linear-gradient(to bottom, rgba(229,9,20,0.8), transparent); animation: scrollPulse 1.5s ease-in-out infinite; }
+    @keyframes scrollPulse { 0%,100%{transform:scaleY(1);opacity:1}50%{transform:scaleY(0.5);opacity:0.4} }
+
+    /* TICKER */
+    .ticker-wrap { background: #E50914; overflow: hidden; height: 34px; display: flex; align-items: center; }
+    .ticker-track { display: flex; animation: ticker 25s linear infinite; white-space: nowrap; }
+    .ticker-track span { font-family: 'Space Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 0 2.5rem; color: rgba(255,255,255,0.88); }
+    .ticker-track span::before { content: '◆  '; }
+    @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 
     /* FEATURES */
-    .features {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-      padding: 4rem 2rem;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    .features h2 {
-      width: 100%;
-      font-size: 2rem;
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-    .card {
-      background: white;
-      border-radius: 8px;
-      padding: 2rem;
-      flex: 1 1 280px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-      text-align: center;
-    }
-    .card .icon { font-size: 2.5rem; margin-bottom: 1rem; }
-    .card h3 { margin-bottom: 0.6rem; font-size: 1.2rem; }
-    .card p { color: #666; font-size: 0.95rem; line-height: 1.6; }
+    .section { padding: 6rem 3rem; }
+    .section-label { font-family: 'Space Mono', monospace; font-size: 0.62rem; letter-spacing: 0.3em; text-transform: uppercase; color: #E50914; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 1rem; }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, #222, transparent); }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.8rem, 5vw, 5rem); line-height: 1; margin-bottom: 3rem; }
+    .section-title .dim { color: #333; }
 
-    /* ABOUT */
-    .about {
-      background: #111;
-      color: white;
-      padding: 4rem 2rem;
-      text-align: center;
-    }
-    .about h2 { font-size: 2rem; margin-bottom: 1rem; }
-    .about p { color: #aaa; max-width: 600px; margin: 0 auto; line-height: 1.8; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #1a1a1a; }
+    .feature-card { background: #0a0a0a; padding: 2.5rem; position: relative; overflow: hidden; transition: background 0.3s; }
+    .feature-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 0; background: #E50914; transition: height 0.4s ease; }
+    .feature-card:hover { background: #111; }
+    .feature-card:hover::before { height: 100%; }
+    .feature-num { font-family: 'Bebas Neue', sans-serif; font-size: 4.5rem; color: #1c1c1c; line-height: 1; margin-bottom: 0.8rem; }
+    .feature-icon { font-size: 1.8rem; margin-bottom: 0.8rem; display: block; }
+    .feature-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; letter-spacing: 0.04em; margin-bottom: 0.6rem; }
+    .feature-desc { font-size: 0.98rem; font-weight: 300; color: #777; line-height: 1.6; }
 
-    /* CONTACT */
-    .contact {
-      padding: 4rem 2rem;
-      max-width: 500px;
-      margin: 0 auto;
-      text-align: center;
-    }
-    .contact h2 { font-size: 2rem; margin-bottom: 2rem; }
-    .contact input,
-    .contact textarea {
-      width: 100%;
-      padding: 0.8rem 1rem;
-      margin-bottom: 1rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 1rem;
-      font-family: Arial, sans-serif;
-    }
-    .contact textarea { height: 130px; resize: vertical; }
-    .contact button {
-      background: #e50914;
-      color: white;
-      border: none;
-      padding: 0.9rem 2.5rem;
-      border-radius: 4px;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    .contact button:hover { background: #ff1a25; }
+    /* CTA */
+    .cta-section { padding: 8rem 3rem; text-align: center; background: #111; position: relative; overflow: hidden; }
+    .cta-section::before { content: 'ROOTFLIK'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-family: 'Bebas Neue', sans-serif; font-size: 18vw; color: transparent; -webkit-text-stroke: 1px #1a1a1a; pointer-events: none; white-space: nowrap; }
+    .cta-section .section-title { font-size: clamp(2.5rem, 6vw, 5.5rem); }
+    .cta-section p { font-size: 1.15rem; color: #666; max-width: 480px; margin: 1rem auto 3rem; line-height: 1.7; }
 
     /* FOOTER */
-    footer {
-      background: #111;
-      color: #666;
-      text-align: center;
-      padding: 1.5rem;
-      font-size: 0.85rem;
+    footer { background: #0a0a0a; border-top: 1px solid #1a1a1a; padding: 2.5rem 3rem; display: flex; justify-content: space-between; align-items: center; }
+    .footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: #E50914; text-decoration: none; }
+    .footer-links { list-style: none; display: flex; gap: 2rem; }
+    .footer-links a { font-family: 'Space Mono', monospace; font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase; color: #555; text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: #f5f5f5; }
+    .footer-copy { font-family: 'Space Mono', monospace; font-size: 0.58rem; color: #333; }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .hero-overlay { padding: 0 1.5rem; }
+      .section { padding: 4rem 1.5rem; }
+      .features-grid { grid-template-columns: 1fr; }
+      footer { flex-direction: column; gap: 1.5rem; text-align: center; padding: 2rem; }
     }
-    footer span { color: #e50914; }
   </style>
 </head>
 <body>
 
-  <!-- Navigation -->
+  <!-- NAV -->
   <nav>
-    <a href="#" class="logo">ROOTFLIK</a>
-    <ul>
+    <a href="#" class="logo">ROOT<span>FLIK</span></a>
+    <ul class="nav-links">
       <li><a href="#features">Features</a></li>
-      <li><a href="#about">About</a></li>
-      <li><a href="#contact">Contact</a></li>
+      <li><a href="#cta">Community</a></li>
+      <li><a href="https://github.com/R0TA3/rootflik" target="_blank">GitHub</a></li>
     </ul>
+    <a href="https://github.com/R0TA3/rootflik" target="_blank" class="nav-cta">View Source</a>
   </nav>
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <h1>Welcome to <span>ROOTFLIK</span></h1>
-    <p>Your personal streaming universe — discover, organize, and enjoy.</p>
-    <a href="#features">Get Started</a>
-    <a href="https://github.com/R0TA3/rootflik" class="outline" target="_blank">View on GitHub</a>
-  </section>
+  <!-- HERO — Unicorn Studio WebGL as full background -->
+  <section class="unicorn-hero">
 
-  <!-- Features Section -->
-  <section class="features" id="features">
-    <h2>Why Rootflik?</h2>
-    <div class="card">
-      <div class="icon">🎬</div>
-      <h3>Smart Discovery</h3>
-      <p>Find movies and shows you'll actually love with smart recommendations.</p>
+    <!-- WebGL Scene -->
+    <div class="unicorn-scene-wrap">
+      <div data-us-project="8gCxJmkIhfXoWrqjisE6" style="width:100%;height:100%;"></div>
     </div>
-    <div class="card">
-      <div class="icon">📋</div>
-      <h3>Watchlists</h3>
-      <p>Save everything you want to watch and never lose track again.</p>
+
+    <!-- Content overlay -->
+    <div class="hero-overlay">
+      <div class="hero-tag">Now Streaming — Open Source</div>
+      <h1 class="hero-title">
+        ROOT<br>
+        <span class="red">FLIK</span><br>
+        <span class="outline">REBORN</span>
+      </h1>
+      <p class="hero-sub">Your personal streaming universe. Discover, organize, and obsess over everything worth watching.</p>
+      <div class="hero-actions">
+        <a href="#features" class="btn-primary">Explore Features</a>
+        <a href="https://github.com/R0TA3/rootflik" target="_blank" class="btn-ghost">★ Star on GitHub</a>
+      </div>
     </div>
-    <div class="card">
-      <div class="icon">🌐</div>
-      <h3>All Platforms</h3>
-      <p>One place for Netflix, Prime, Disney+ and all your services.</p>
-    </div>
-    <div class="card">
-      <div class="icon">🔓</div>
-      <h3>Open Source</h3>
-      <p>Free forever. Fork it, modify it, make it your own on GitHub.</p>
+
+    <div class="scroll-hint">
+      <span>Scroll</span>
+      <div class="scroll-line"></div>
     </div>
   </section>
 
-  <!-- About Section -->
-  <section class="about" id="about">
-    <h2>About This Project</h2>
-    <p>Rootflik is an open source project by <strong>R0TA3</strong>. Built with pure HTML, CSS and JavaScript — no frameworks, no bloat. Just a fast, lightweight streaming companion for everyone.</p>
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker-track">
+      <span>Stream Everything</span><span>Open Source</span><span>Built by R0TA3</span>
+      <span>WebGL Powered</span><span>Dark Mode Native</span><span>Fast & Free</span>
+      <span>Stream Everything</span><span>Open Source</span><span>Built by R0TA3</span>
+      <span>WebGL Powered</span><span>Dark Mode Native</span><span>Fast & Free</span>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="section-label">What We Offer</div>
+    <h2 class="section-title">BUILT FOR<br><span class="dim">TRUE</span> STREAMERS</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-num">01</div>
+        <span class="feature-icon">🎬</span>
+        <div class="feature-title">Smart Discovery</div>
+        <p class="feature-desc">AI-powered recommendations that actually understand your taste — not just what's trending.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">02</div>
+        <span class="feature-icon">🌐</span>
+        <div class="feature-title">All Platforms</div>
+        <p class="feature-desc">Netflix, Prime, Disney+, HBO — one interface to rule every streaming service you have.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">03</div>
+        <span class="feature-icon">📋</span>
+        <div class="feature-title">Watchlists</div>
+        <p class="feature-desc">Create, organize, and share watchlists. Never forget what you meant to watch next.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">04</div>
+        <span class="feature-icon">⚡</span>
+        <div class="feature-title">Blazing Fast</div>
+        <p class="feature-desc">Pure HTML, CSS and JavaScript. No bloated frameworks. Loads instantly on any device.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">05</div>
+        <span class="feature-icon">🔓</span>
+        <div class="feature-title">Open Source</div>
+        <p class="feature-desc">Fork it. Break it. Rebuild it. Full source code on GitHub — MIT licensed and free forever.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">06</div>
+        <span class="feature-icon">🌙</span>
+        <div class="feature-title">Dark by Default</div>
+        <p class="feature-desc">Cinematic dark mode built into the core. Designed for late-night binge sessions.</p>
+      </div>
+    </div>
   </section>
 
-  <!-- Contact Section -->
-  <section class="contact" id="contact">
-    <h2>Get in Touch</h2>
-    <input type="text" placeholder="Your Name" />
-    <input type="email" placeholder="Your Email" />
-    <textarea placeholder="Your Message..."></textarea>
-    <button>Send Message</button>
+  <!-- CTA -->
+  <section class="cta-section" id="cta">
+    <div class="section-label" style="justify-content:center">Get Involved</div>
+    <h2 class="section-title">JOIN THE<br><span style="color:#E50914">COMMUNITY</span></h2>
+    <p>Rootflik is open source and growing. Contribute, suggest features, or just ★ the repo to show your support.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a href="https://github.com/R0TA3/rootflik" target="_blank" class="btn-primary">Open on GitHub</a>
+      <a href="https://github.com/R0TA3/rootflik/issues" target="_blank" class="btn-ghost">Report an Issue</a>
+    </div>
   </section>
 
-  <!-- Footer -->
+  <!-- FOOTER -->
   <footer>
-    <p>© 2025 <span>ROOTFLIK</span> — Made with ❤️ by R0TA3</p>
+    <a href="#" class="footer-logo">ROOTFLIK</a>
+    <ul class="footer-links">
+      <li><a href="https://github.com/R0TA3/rootflik" target="_blank">GitHub</a></li>
+      <li><a href="https://github.com/R0TA3" target="_blank">R0TA3</a></li>
+      <li><a href="#features">Features</a></li>
+    </ul>
+    <span class="footer-copy">© 2025 R0TA3 — MIT License</span>
   </footer>
+
+  <!-- Unicorn Studio SDK loader -->
+  <script>
+    !function(){
+      var u = window.UnicornStudio;
+      if(u && u.init){
+        if(document.readyState === "loading"){
+          document.addEventListener("DOMContentLoaded", function(){ u.init() });
+        } else { u.init() }
+      } else {
+        window.UnicornStudio = { isInitialized: false };
+        var i = document.createElement("script");
+        i.src = "https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v2.1.3/dist/unicornStudio.umd.js";
+        i.onload = function(){
+          if(document.readyState === "loading"){
+            document.addEventListener("DOMContentLoaded", function(){ UnicornStudio.init() });
+          } else { UnicornStudio.init() }
+        };
+        (document.head || document.body).appendChild(i);
+      }
+    }();
+  </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
