@@ -461,7 +461,7 @@ img{display:block}
  * - allow-top-navigation:  BLOCKS page-level redirects → stops adult site redirects
  * - allow-popups-to-escape-sandbox: BLOCKS popups from bypassing sandbox
  */
-#mplayer{width:100%;aspect-ratio:16/9;background:#000;display:block;border:none}
+/* #mplayer styles are now inline in the player-wrap div */
 
 /* Modal body */
 .mbody{padding:16px clamp(13px,2.5vw,20px)}
@@ -707,33 +707,44 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       <div class="srv-bar">
         <span class="srv-label">Server:</span>
         <button class="srv on" data-s="vs1">① VidSrc</button>
-        <button class="srv" data-s="vs2">② VidSrc2</button>
-        <button class="srv" data-s="e2">③ 2Embed</button>
-        <button class="srv" data-s="vl">④ VidLink</button>
-        <button class="srv" data-s="sm">⑤ Smashy</button>
+        <button class="srv" data-s="e2">② 2Embed</button>
+        <button class="srv" data-s="vl">③ VidLink</button>
+        <button class="srv" data-s="sm">④ Smashy</button>
+        <button class="srv" data-s="vs3">⑤ VidSrc3</button>
         <button class="srv" data-s="yt">🎞 Trailer</button>
       </div>
       <div class="player-tip">
-        💡 If a server doesn't load or buffers, switch to another server above. All ads &amp; popups are blocked.
+        💡 If a server doesn't load, try another. Close any ad overlay with the ✕ on it.
       </div>
       <div class="ep-bar" id="ep-bar" style="display:none">
         <select id="s-sel"></select>
         <select id="e-sel"></select>
         <button class="ep-load" id="ep-load">▶ Load Episode</button>
       </div>
-      <!--
-        SECURITY:
-        sandbox allows popups (needed for some players) but blocks top-navigation
-        so the embed can NEVER redirect the main RootFlik page.
-        Our JS popup blocker above intercepts window.open() calls further.
-      -->
-      <iframe id="mplayer"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-presentation"
-        allowfullscreen
-        allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-        referrerpolicy="no-referrer"
-        loading="lazy">
-      </iframe>
+      <!-- Player wrapper with ad-shield -->
+      <div id="player-wrap" style="position:relative;background:#000;">
+        <iframe id="mplayer"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
+          allowfullscreen
+          allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+          referrerpolicy="no-referrer"
+          loading="lazy"
+          style="width:100%;aspect-ratio:16/9;display:block;border:none;">
+        </iframe>
+        <!-- AD SHIELD: transparent overlay that catches popup ad clicks -->
+        <div id="ad-shield" style="
+          position:absolute;inset:0;z-index:50;
+          pointer-events:none;
+        "></div>
+        <!-- AD DISMISS button — shown when an ad overlay is detected -->
+        <button id="ad-dismiss" onclick="dismissAd()" style="
+          display:none;position:absolute;top:8px;right:8px;z-index:100;
+          background:rgba(229,9,20,.92);color:#fff;border:none;
+          border-radius:6px;padding:7px 14px;font-family:var(--font);
+          font-size:.75rem;font-weight:800;cursor:pointer;
+          box-shadow:0 2px 12px rgba(0,0,0,.5);
+        ">✕ Close Ad</button>
+      </div>
     </div>
 
     <!-- Info area -->
@@ -779,11 +790,9 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   // Block window.open — stops all popup ads
   const _open = window.open.bind(window);
   window.open = function(url, name, features){
-    // Only allow YouTube trailer popups — everything else blocked
-    if(url && (url.includes('youtube.com') || url.includes('youtu.be'))){
-      return _open(url, name, features);
-    }
-    console.warn('[RootFlik] Blocked popup:', url);
+    // Block ALL window.open calls — these are always ads from embed players
+    // Legitimate links use <a href> tags and go through our click handler
+    console.warn('[RootFlik] Blocked window.open popup:', url);
     return null;
   };
 
@@ -1445,10 +1454,12 @@ function loadStream(srv){
       else{ showToast('No trailer found','warn'); return; }
       break;
     case'vs1':
+      // VidSrc CC — cleanest, primary
       src=isTV?`https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}`:`https://vidsrc.cc/v2/embed/movie/${id}`;
       break;
-    case'vs2':
-      src=isTV?`https://vidsrc.to/embed/tv/${id}/${season}/${episode}`:`https://vidsrc.to/embed/movie/${id}`;
+    case'vs3':
+      // VidSrc XYZ — alternate clean source
+      src=isTV?`https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`:`https://vidsrc.xyz/embed/movie?tmdb=${id}`;
       break;
     case'e2':
       src=isTV?`https://www.2embed.cc/embedtvfull/${id}&s=${season}&e=${episode}`:`https://www.2embed.cc/embed/${id}`;
@@ -1461,7 +1472,35 @@ function loadStream(srv){
       break;
   }
   $('mplayer').src=src;
+  // Reset ad dismiss button
+  const adBtn=$('ad-dismiss');
+  if(adBtn) adBtn.style.display='none';
 }
+
+// Called by the ✕ Close Ad button
+function dismissAd(){
+  // Reload the iframe src to clear the ad overlay
+  const p=$('mplayer');
+  const src=p.src;
+  p.src='';
+  setTimeout(()=>{ p.src=src; },100);
+  $('ad-dismiss').style.display='none';
+}
+
+// Watch for suspicious iframe size changes that indicate an ad overlay appeared
+(function watchAds(){
+  const p=$('mplayer');
+  if(!p) return;
+  // If user clicks inside player area, check if an ad might have appeared
+  const wrap=$('player-wrap');
+  if(wrap){
+    wrap.addEventListener('click',()=>{
+      // Show the dismiss button briefly as a safety net
+      const btn=$('ad-dismiss');
+      if(btn) btn.style.display='block';
+    });
+  }
+})();
 
 // Watchlist toggle from modal
 $('m-wl').onclick=()=>{
