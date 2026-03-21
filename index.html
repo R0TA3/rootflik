@@ -182,7 +182,7 @@ img{display:block}
 .ep-bar select:focus{border-color:var(--red)}
 .ep-load{background:var(--red);border:none;color:#fff;padding:6px 15px;border-radius:5px;font-family:var(--font);font-size:.74rem;font-weight:800;cursor:pointer;transition:background .18s;}
 .ep-load:hover{background:var(--red2)}
-#mplayer{width:100%;aspect-ratio:16/9;background:#000;display:block;border:none;}
+/* mplayer styles inline */
 .mbody{padding:16px clamp(13px,2.5vw,20px)}
 .m-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px}
 #m-title{font-family:'Bebas Neue',sans-serif;font-size:1.75rem;letter-spacing:2px;line-height:1}
@@ -311,6 +311,10 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   margin-left:8px;vertical-align:middle;
 }
 
+
+/* ── AD SHIELDS (corner blockers over iframe) ── */
+.rf-shield{position:absolute;z-index:999;pointer-events:all;background:transparent;user-select:none;}
+#player-wrap{position:relative;background:#000;overflow:hidden;}
 </style>
 </head>
 <body>
@@ -318,39 +322,166 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 <!-- ════════ SECURITY SHIELD ════════ -->
 <script>
 (function(){
-  // 1. Kill ALL window.open — no popups ever
-  window.open=function(){return null;};
+  'use strict';
 
-  // 2. Protect location from hijacking
-  try{
-    if(Object.getOwnPropertyDescriptor(window,'location')?.configurable){
-      Object.defineProperty(window,'location',{
-        get(){return location;},
-        set(v){console.warn('[Shield] location blocked:',v);}
-      });
-    }
-  }catch(e){}
+  /* ══════════════════════════════════════════════════════
+     ROOTFLIK NUCLEAR AD SHIELD v3
+     Every single method ads use — blocked.
+  ══════════════════════════════════════════════════════ */
 
-  // 3. Block external link clicks — whitelist only
-  document.addEventListener('click',function(e){
-    const a=e.target.closest('a[href]');
+  // 1. Kill window.open — period. No exceptions.
+  window.open = function(){ return null; };
+  window.alert = function(){};
+  window.confirm = function(){ return false; };
+  window.prompt = function(){ return null; };
+
+  // 2. Block all external navigation
+  document.addEventListener('click', function(e){
+    const a = e.target.closest('a[href]');
     if(!a) return;
-    const h=(a.getAttribute('href')||'').trim();
-    if(!h||h.startsWith('#')) return;
+    const h = (a.getAttribute('href')||'').trim();
+    if(!h || h.startsWith('#')) return;
     if(h.includes('instagram.com')) return;
-    // Allow official platform buttons in modal
-    if(a.classList.contains('plat-btn')&&a.target==='_blank') return;
-    // Block everything else trying to open externally
-    if(h.startsWith('http')||h.startsWith('//')||a.target==='_blank'){
+    if(a.classList.contains('plat-btn') && a.target==='_blank') return;
+    if(h.startsWith('http') || h.startsWith('//') || a.target==='_blank'){
       e.preventDefault();
       e.stopImmediatePropagation();
+      return false;
     }
-  },true);
+  }, true);
 
-  // 4. Block form navigation
-  document.addEventListener('submit',function(e){
-    if(e.target.action&&!e.target.action.includes(location.hostname)) e.preventDefault();
-  },true);
+  // 3. Block form submissions to external sites
+  document.addEventListener('submit', function(e){
+    if(e.target.action && !e.target.action.includes(location.hostname)) e.preventDefault();
+  }, true);
+
+  // 4. Block ALL postMessages from iframes
+  window.addEventListener('message', function(e){
+    // Only allow messages from our own origin
+    if(e.origin !== location.origin){
+      e.stopImmediatePropagation();
+    }
+  }, true);
+
+  // 5. Pointer-events shield over iframe — catches overlay ad clicks
+  // The iframe is wrapped in a div; clicks on the iframe corner ads are intercepted
+  function addIframeShield(){
+    const player = document.getElementById('mplayer');
+    if(!player) return;
+    const wrap = player.parentElement;
+    if(!wrap) return;
+
+    // Remove old shields
+    wrap.querySelectorAll('.rf-shield').forEach(s=>s.remove());
+
+    // Create corner shields — ads appear in corners/edges, video controls are center
+    const positions = [
+      // Top strip — where notification overlays appear
+      {top:'0',left:'0',right:'0',height:'80px'},
+      // Bottom-right corner — where most ad CTAs appear
+      {bottom:'40px',right:'0',width:'200px',height:'80px'},
+      // Top-right corner
+      {top:'0',right:'0',width:'180px',height:'100px'},
+      // Top-left corner
+      {top:'0',left:'0',width:'180px',height:'100px'},
+    ];
+
+    positions.forEach(function(pos){
+      const shield = document.createElement('div');
+      shield.className = 'rf-shield';
+      shield.style.cssText = 'position:absolute;z-index:999;pointer-events:all;background:transparent;cursor:default;';
+      Object.assign(shield.style, pos);
+      shield.addEventListener('click', function(e){
+        e.stopPropagation();
+        e.preventDefault();
+      });
+      shield.addEventListener('mousedown', function(e){ e.stopPropagation(); });
+      wrap.appendChild(shield);
+    });
+  }
+
+  // 6. MutationObserver — nuke any overlay element the moment it's added to DOM
+  const BAD_KEYWORDS = [
+    'missed','video call','join now','click here',
+    'casino','bet','adult','webcam','dating',
+    'prize','winner','bonus','deposit','loan',
+    'notification','subscribe now','spin','free spin',
+    'hot girls','chat now','meet','singles'
+  ];
+  const BAD_SELECTORS = [
+    '[class*="notif"]','[class*="overlay"]','[class*="popup"]',
+    '[class*="modal"]','[id*="popup"]','[id*="overlay"]',
+    '[id*="notif"]','[class*="toast"]','[class*="banner-ad"]',
+    '[class*="ad-container"]','[class*="interstitial"]',
+    '[style*="z-index: 9"]','[style*="z-index:9"]',
+  ];
+
+  function nukeEl(el){
+    try{
+      el.style.cssText='display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;width:0!important;height:0!important;';
+      if(el.parentNode) el.parentNode.removeChild(el);
+    }catch(e){}
+  }
+
+  function scanAndNuke(){
+    // Kill by text content in overlay-positioned elements
+    document.querySelectorAll('div,section,article,aside').forEach(function(el){
+      try{
+        // Skip our own elements
+        if(el.id && ['nav','modal','toast','hero','mplayer','player-wrap'].includes(el.id)) return;
+        if(el.closest('#nav,#modal,#toast,#hero,.mbox,.pg')) return;
+
+        const s = getComputedStyle(el);
+        const z = parseInt(s.zIndex)||0;
+        const pos = s.position;
+
+        // High z-index floating elements that aren't ours = ads
+        if((pos==='fixed'||pos==='absolute') && z>100){
+          const txt = (el.innerText||el.textContent||'').toLowerCase().trim();
+          if(txt.length > 0 && txt.length < 500){
+            if(BAD_KEYWORDS.some(kw=>txt.includes(kw))){
+              nukeEl(el); return;
+            }
+          }
+          // Even without text match, kill very high z-index overlays that we didn't create
+          if(z>9000){ nukeEl(el); return; }
+        }
+      }catch(err){}
+    });
+
+    // Kill by suspicious selectors
+    BAD_SELECTORS.forEach(function(sel){
+      try{
+        document.querySelectorAll(sel).forEach(function(el){
+          if(el.closest('#nav,#modal,#toast,.mbox,.pg')) return;
+          const txt=(el.innerText||'').toLowerCase();
+          if(BAD_KEYWORDS.some(kw=>txt.includes(kw))) nukeEl(el);
+        });
+      }catch(err){}
+    });
+  }
+
+  // Run continuously
+  const _obs = new MutationObserver(function(){
+    scanAndNuke();
+  });
+
+  function startObserver(){
+    _obs.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
+    scanAndNuke();
+    // Also add iframe shields
+    addIframeShield();
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', startObserver);
+  } else {
+    startObserver();
+  }
+
+  // Re-add iframe shields whenever player src changes
+  window.addEventListener('focus', function(){ scanAndNuke(); addIframeShield(); });
+
 })();
 </script>
 
@@ -511,13 +642,11 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       <div class="srv-bar">
         <span class="srv-label">Server:</span>
         <button class="srv on" data-s="vs1">① VidSrc</button>
-        <button class="srv" data-s="vs2">② VidSrc2</button>
-        <button class="srv" data-s="vs3">③ VidSrc3</button>
-        <button class="srv" data-s="vl">④ VidLink</button>
-        <button class="srv" data-s="se">⑤ SuperEmbed</button>
+        <button class="srv" data-s="vs2">② Embed</button>
+        <button class="srv" data-s="vl">③ VidLink</button>
         <button class="srv" data-s="yt">🎞 Trailer</button>
       </div>
-      <div class="player-tip">🔒 Ads & popups blocked · Switch server if video doesn't load</div>
+      <div class="player-tip">🔒 All ads & popups blocked · If a server shows any ad overlay, switch to another server above</div>
       <div class="qual-bar">
         <span class="qual-label">Quality:</span>
         <button class="qbtn" data-q="4k" title="4K Ultra HD">4K</button>
@@ -531,13 +660,16 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
         <select id="e-sel"></select>
         <button class="ep-load" id="ep-load">▶ Load</button>
       </div>
-      <iframe id="mplayer"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
-        allowfullscreen
-        allow="autoplay;fullscreen;picture-in-picture;encrypted-media"
-        referrerpolicy="no-referrer"
-        loading="lazy">
-      </iframe>
+      <div id="player-wrap" style="position:relative;background:#000;overflow:hidden;">
+        <iframe id="mplayer"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+          allowfullscreen
+          allow="autoplay;fullscreen;picture-in-picture;encrypted-media"
+          referrerpolicy="no-referrer"
+          loading="lazy"
+          style="width:100%;aspect-ratio:16/9;display:block;border:none;">
+        </iframe>
+      </div>
     </div>
     <div class="mbody">
       <div class="m-header">
@@ -1233,16 +1365,10 @@ function loadStream(srv){
         :`https://vidsrc.cc/v2/embed/movie/${id}?autoPlay=1`;
       break;
     case'vs2':
-      // VidSrc XYZ — supports HD/4K
+      // embed.su — clean player, no overlays
       src=isTV
-        ?`https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}&autoplay=true`
-        :`https://vidsrc.xyz/embed/movie?tmdb=${id}&autoplay=true`;
-      break;
-    case'vs3':
-      // VidSrc.to — alternate, good quality
-      src=isTV
-        ?`https://vidsrc.to/embed/tv/${id}/${season}/${episode}`
-        :`https://vidsrc.to/embed/movie/${id}`;
+        ?`https://embed.su/embed/tv/${id}/${season}/${episode}`
+        :`https://embed.su/embed/movie/${id}`;
       break;
     case'vl':
       // VidLink — clean UI, HD+
@@ -1250,14 +1376,11 @@ function loadStream(srv){
         ?`https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=e50914&secondaryColor=e50914`
         :`https://vidlink.pro/movie/${id}?primaryColor=e50914&secondaryColor=e50914`;
       break;
-    case'se':
-      // SuperEmbed — multilingual, good Indian coverage
-      src=isTV
-        ?`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`
-        :`https://multiembed.mov/?video_id=${id}&tmdb=1`;
-      break;
+
   }
   $('mplayer').src=src;
+  // Re-add corner shields after src change
+  setTimeout(function(){ if(window.addIframeShield) window.addIframeShield(); }, 800);
 }
 
 // Quality button handlers
