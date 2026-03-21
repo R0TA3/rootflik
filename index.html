@@ -315,6 +315,45 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 /* ── AD SHIELDS (corner blockers over iframe) ── */
 .rf-shield{position:absolute;z-index:999;pointer-events:all;background:transparent;user-select:none;}
 #player-wrap{position:relative;background:#000;overflow:hidden;}
+
+/* ── PLAYER LOADING STATE ── */
+#player-wrap{position:relative;background:#000;overflow:hidden;}
+#player-loading{
+  position:absolute;inset:0;z-index:60;
+  background:#000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  transition:opacity .3s;
+}
+#player-loading.hide{opacity:0;pointer-events:none;}
+.spin{
+  width:40px;height:40px;border-radius:50%;
+  border:3px solid rgba(229,9,20,.2);
+  border-top-color:var(--red);
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pl-text{font-size:.75rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.5px;}
+
+#player-unavail{
+  position:absolute;inset:0;z-index:61;
+  background:var(--card);
+  display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  text-align:center;padding:24px;
+}
+#player-unavail.show{display:flex;}
+.unavail-icon{font-size:2.5rem;margin-bottom:4px;}
+.unavail-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text);}
+.unavail-sub{font-size:.78rem;color:var(--sub);font-weight:600;max-width:280px;line-height:1.6;}
+.unavail-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px;}
+.unavail-btn{
+  background:var(--red);color:#fff;border:none;
+  font-family:var(--font);font-size:.72rem;font-weight:800;
+  padding:8px 16px;border-radius:var(--r);cursor:pointer;transition:background .18s;
+}
+.unavail-btn:hover{background:var(--red2);}
+.unavail-btn.ghost{background:var(--layer);border:1.5px solid var(--border2);color:var(--sub);}
+.unavail-btn.ghost:hover{background:var(--lift);color:var(--text);}
 </style>
 </head>
 <body>
@@ -641,9 +680,11 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
     <div>
       <div class="srv-bar">
         <span class="srv-label">Server:</span>
-        <button class="srv on" data-s="vs1">① VidSrc</button>
-        <button class="srv" data-s="vs2">② Embed</button>
-        <button class="srv" data-s="vl">③ VidLink</button>
+        <button class="srv on" data-s="s1">① 2Embed</button>
+        <button class="srv" data-s="s2">② AutoEmbed</button>
+        <button class="srv" data-s="s3">③ MoviesAPI</button>
+        <button class="srv" data-s="s4">④ VidSrc</button>
+        <button class="srv" data-s="s5">⑤ EmbedSu</button>
         <button class="srv" data-s="yt">🎞 Trailer</button>
       </div>
       <div class="player-tip">🔒 All ads & popups blocked · If a server shows any ad overlay, switch to another server above</div>
@@ -661,12 +702,26 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
         <button class="ep-load" id="ep-load">▶ Load</button>
       </div>
       <div id="player-wrap" style="position:relative;background:#000;overflow:hidden;">
+        <!-- Loading spinner -->
+        <div id="player-loading">
+          <div class="spin"></div>
+          <div class="pl-text" id="pl-text">Loading stream…</div>
+        </div>
+        <!-- Not available overlay -->
+        <div id="player-unavail">
+          <div class="unavail-icon">📡</div>
+          <div class="unavail-title">Not Available Here</div>
+          <div class="unavail-sub" id="unavail-sub">This title isn't on this server. Trying next server automatically…</div>
+          <div class="unavail-btns">
+            <button class="unavail-btn" onclick="tryNextServer()">⟳ Try Next Server</button>
+            <button class="unavail-btn ghost" id="unavail-yt-btn" style="display:none" onclick="loadStream('yt')">🎞 Watch Trailer</button>
+          </div>
+        </div>
         <iframe id="mplayer"
           sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
           allowfullscreen
           allow="autoplay;fullscreen;picture-in-picture;encrypted-media"
           referrerpolicy="no-referrer"
-          loading="lazy"
           style="width:100%;aspect-ratio:16/9;display:block;border:none;">
         </iframe>
       </div>
@@ -1272,19 +1327,25 @@ async function openModal(item){
   $('sim-row').innerHTML='';$('plat-row').innerHTML='';
   $('ep-bar').style.display='none';
   document.querySelectorAll('.srv').forEach(b=>b.classList.remove('on'));
-  document.querySelector('.srv[data-s="vs1"]').classList.add('on');
+  document.querySelector('.srv[data-s="s1"]').classList.add('on');
   $('modal').classList.add('on');document.body.style.overflow='hidden';
 
   MS={item,isTV,ep,trailerKey:null,season:1,episode:1};
   $('m-wl').classList.toggle('on',inWL(item.id));
+  _imdbId=null; // reset
 
-  // Parallel fetch — faster
-  const [det,vids,cred,sim]=await Promise.all([
+  // Fetch everything in parallel — including external_ids for IMDB ID (fixes wrong movie bug)
+  const [det,vids,cred,sim,extIds]=await Promise.all([
     api(`${BASE}/${ep}/${item.id}?api_key=${KEY}`),
     api(`${BASE}/${ep}/${item.id}/videos?api_key=${KEY}`),
     api(`${BASE}/${ep}/${item.id}/credits?api_key=${KEY}`),
     api(`${BASE}/${ep}/${item.id}/similar?api_key=${KEY}&page=1`),
+    api(`${BASE}/${ep}/${item.id}/external_ids?api_key=${KEY}`),
   ]);
+
+  // IMDB ID — more reliable for embed servers than TMDB ID
+  _imdbId = extIds?.imdb_id || det?.imdb_id || null;
+  MS.imdbId = _imdbId;
 
   if(det){
     $('m-ov').textContent=det.overview||'No description.';
@@ -1323,7 +1384,9 @@ async function openModal(item){
     const s=safe(sim.results,ep).slice(0,12);
     if(s.length){$('sim-sec').style.display='block';const f=document.createDocumentFragment();s.forEach(x=>f.appendChild(makeCard(x,ep)));$('sim-row').appendChild(f);}
   }
-  loadStream('vs1');
+  // Reset failover state for new movie
+  _failoverIdx=0;
+  loadStream('s1');
 }
 
 async function loadEps(tvId,season){
@@ -1336,51 +1399,212 @@ async function loadEps(tvId,season){
 $('ep-load').onclick=()=>{
   MS.season=parseInt($('s-sel').value)||1;
   MS.episode=parseInt($('e-sel').value)||1;
-  loadStream(document.querySelector('.srv.on')?.dataset.s||'vs1');
+  loadStream(document.querySelector('.srv.on')?.dataset.s||'s1');
 };
 
 document.querySelectorAll('.srv[data-s]').forEach(btn=>{
-  btn.onclick=()=>{document.querySelectorAll('.srv').forEach(b=>b.classList.remove('on'));btn.classList.add('on');loadStream(btn.dataset.s);};
+  btn.onclick=()=>{
+    // Manual server pick — reset failover to this server's position
+    const srv=btn.dataset.s;
+    _failoverIdx=SERVER_ORDER.indexOf(srv);
+    if(_failoverIdx<0) _failoverIdx=0;
+    clearTimeout(_failoverTimer);
+    loadStream(srv);
+  };
 });
 
-// Stream URLs — Indian movies/series work on all these servers
+// Stream URLs — uses TMDB ID (primary) verified against external_ids for accuracy
 let QUALITY='1080'; // default quality
 
-function loadStream(srv){
-  const{item,isTV,trailerKey,season,episode}=MS;
-  if(!item)return;
-  const id=item.id;let src='';
+// Store imdb_id for the current item for better embed accuracy
+let _imdbId = null;
 
-  // Quality params for servers that support them
-  const qParam=QUALITY==='4k'?'&quality=4k':QUALITY==='720'?'&quality=720':QUALITY==='480'?'&quality=480':QUALITY==='auto'?'':'&quality=1080';
+async function fetchImdbId(id, ep){
+  try{
+    const d = await api(`${BASE}/${ep}/${id}/external_ids?api_key=${KEY}`);
+    return d?.imdb_id || null;
+  }catch{ return null; }
+}
+
+// Server order for auto-failover (skips 'yt')
+const SERVER_ORDER = ['s1','s2','s3','s4','s5'];
+let _failoverIdx = 0;
+let _failoverTimer = null;
+let _currentSrv = 's1';
+
+function getStreamSrc(srv){
+  const{item,isTV,trailerKey,season,episode}=MS;
+  if(!item) return '';
+  const tmdbId = item.id;
+  const imdbId = _imdbId || MS.imdbId;
+  const movieId = (!isTV && imdbId) ? imdbId : tmdbId;
 
   switch(srv){
     case'yt':
-      if(trailerKey)src=`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0&modestbranding=1&vq=${QUALITY==='4k'?'hd2160':QUALITY==='1080'?'hd1080':QUALITY==='720'?'hd720':'large'}`;
-      else{toast(L.noTrailer||'No trailer found','warn');return;}break;
-    case'vs1':
-      // VidSrc CC — best quality, 4K when available
-      src=isTV
-        ?`https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}?autoPlay=1`
-        :`https://vidsrc.cc/v2/embed/movie/${id}?autoPlay=1`;
-      break;
-    case'vs2':
-      // embed.su — clean player, no overlays
-      src=isTV
-        ?`https://embed.su/embed/tv/${id}/${season}/${episode}`
-        :`https://embed.su/embed/movie/${id}`;
-      break;
-    case'vl':
-      // VidLink — clean UI, HD+
-      src=isTV
-        ?`https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=e50914&secondaryColor=e50914`
-        :`https://vidlink.pro/movie/${id}?primaryColor=e50914&secondaryColor=e50914`;
-      break;
+      return trailerKey
+        ?`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0&modestbranding=1&vq=${QUALITY==='4k'?'hd2160':QUALITY==='1080'?'hd1080':QUALITY==='720'?'hd720':'large'}`
+        :'';
 
+    case's1':
+      // 2embed — clean, no ads, wide coverage including Indian films
+      return isTV
+        ?`https://www.2embed.cc/embedtvfull/${tmdbId}&s=${season}&e=${episode}`
+        :`https://www.2embed.cc/embed/${movieId}`;
+
+    case's2':
+      // AutoEmbed — reliable, no popups, works for Bollywood/Tamil/Telugu
+      return isTV
+        ?`https://autoembed.co/tv/tmdb/${tmdbId}-${season}-${episode}`
+        :`https://autoembed.co/movie/tmdb/${movieId}`;
+
+    case's3':
+      // MoviesAPI — HD, clean, good Indian content coverage
+      return isTV
+        ?`https://moviesapi.club/tv/${tmdbId}-${season}-${episode}`
+        :`https://moviesapi.club/movie/${tmdbId}`;
+
+    case's4':
+      // VidSrc CC — proven clean primary
+      return isTV
+        ?`https://vidsrc.cc/v2/embed/tv/${tmdbId}/${season}/${episode}?autoPlay=1`
+        :`https://vidsrc.cc/v2/embed/movie/${movieId}?autoPlay=1`;
+
+    case's5':
+      // Embed.su — TMDB-based, clean player
+      return isTV
+        ?`https://embed.su/embed/tv/${tmdbId}/${season}/${episode}`
+        :`https://embed.su/embed/movie/${tmdbId}`;
   }
-  $('mplayer').src=src;
-  // Re-add corner shields after src change
-  setTimeout(function(){ if(window.addIframeShield) window.addIframeShield(); }, 800);
+  return '';
+}
+
+function showPlayerLoading(text){
+  const pl=$('player-loading');
+  const pu=$('player-unavail');
+  if(pl){pl.classList.remove('hide');if(text)$('pl-text').textContent=text;}
+  if(pu) pu.classList.remove('show');
+}
+
+function showPlayerReady(){
+  const pl=$('player-loading');
+  if(pl) pl.classList.add('hide');
+  const pu=$('player-unavail');
+  if(pu) pu.classList.remove('show');
+}
+
+function showPlayerUnavail(allFailed){
+  showPlayerLoading(null);
+  $('player-loading').classList.add('hide');
+  const pu=$('player-unavail');
+  if(!pu) return;
+  $('unavail-sub').textContent=allFailed
+    ?'This title is not available on any server right now. Try the trailer or check back later.'
+    :'This title is not on this server. Trying next server…';
+  const ytBtn=$('unavail-yt-btn');
+  if(ytBtn) ytBtn.style.display=MS.trailerKey?'block':'none';
+  pu.classList.add('show');
+}
+
+function tryNextServer(){
+  // Find next server in order
+  const order=SERVER_ORDER;
+  _failoverIdx=(_failoverIdx+1)%order.length;
+  const next=order[_failoverIdx];
+  if(next===_currentSrv&&order.length>1){
+    // Went full circle — all failed
+    showPlayerUnavail(true);
+    return;
+  }
+  loadStream(next);
+}
+
+// Set up iframe load detection
+function setupIframeDetection(){
+  const iframe=$('mplayer');
+  if(!iframe) return;
+
+  // Clear any existing timer
+  clearTimeout(_failoverTimer);
+
+  // onload fires when iframe gets a response (even error pages)
+  iframe.onload=function(){
+    // Give the player 4 seconds to actually start showing content
+    // If it stays blank, try next server
+    clearTimeout(_failoverTimer);
+    _failoverTimer=setTimeout(function(){
+      // Check if iframe has loaded real content
+      // We can't access iframe internals (cross-origin) but we can check
+      // if the src is still set (if it auto-cleared, something failed)
+      if(iframe.src && iframe.src!=='about:blank'){
+        showPlayerReady();
+      }
+    }, 2500);
+  };
+
+  iframe.onerror=function(){
+    clearTimeout(_failoverTimer);
+    // Auto try next server on hard error
+    _failoverTimer=setTimeout(()=>tryNextServer(), 1000);
+  };
+}
+
+function loadStream(srv){
+  const{trailerKey}=MS;
+  if(!MS.item) return;
+
+  // Handle trailer specially
+  if(srv==='yt'){
+    if(trailerKey){
+      _currentSrv='yt';
+      showPlayerLoading('Loading trailer…');
+      $('mplayer').src=getStreamSrc('yt');
+      setupIframeDetection();
+    }else{
+      toast(L.noTrailer||'No trailer found','warn');
+    }
+    return;
+  }
+
+  _currentSrv=srv;
+  const src=getStreamSrc(srv);
+  if(!src){ tryNextServer(); return; }
+
+  // Update server button highlight
+  document.querySelectorAll('.srv').forEach(b=>b.classList.remove('on'));
+  const activeBtn=document.querySelector(`.srv[data-s="${srv}"]`);
+  if(activeBtn) activeBtn.classList.add('on');
+
+  // Show loading spinner
+  const srvNames={'vs1':'VidSrc','vs2':'Embed','vl':'VidLink'};
+  showPlayerLoading(`Loading on ${srvNames[srv]||srv}…`);
+
+  // Hide unavail overlay
+  $('player-unavail').classList.remove('show');
+
+  $('mplayer').src='';
+  // Small delay to ensure browser clears previous src
+  requestAnimationFrame(()=>{
+    $('mplayer').src=src;
+    setupIframeDetection();
+    // Set failover timer — if still loading after 12s, try next server
+    clearTimeout(_failoverTimer);
+    _failoverTimer=setTimeout(function(){
+      if($('player-loading')&&!$('player-loading').classList.contains('hide')){
+        // Still showing loading = stream didn't start
+        const nextIdx=(SERVER_ORDER.indexOf(srv)+1)%SERVER_ORDER.length;
+        const nextSrv=SERVER_ORDER[nextIdx];
+        if(nextSrv && nextSrv!==srv){
+          toast('Trying next server…','');
+          loadStream(nextSrv);
+        }else{
+          showPlayerUnavail(true);
+        }
+      }
+    }, 12000);
+  });
+
+  // Re-add corner shields
+  setTimeout(function(){ if(window.addIframeShield) window.addIframeShield(); }, 1000);
 }
 
 // Quality button handlers
@@ -1390,7 +1614,7 @@ document.querySelectorAll('.qbtn').forEach(btn=>{
     document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('on'));
     btn.classList.add('on');
     // Reload with new quality
-    const activeSrv=document.querySelector('.srv.on')?.dataset.s||'vs1';
+    const activeSrv=document.querySelector('.srv.on')?.dataset.s||'s1';
     loadStream(activeSrv);
     toast('Quality: '+btn.textContent,'ok');
   };
@@ -1399,7 +1623,17 @@ document.querySelectorAll('.qbtn').forEach(btn=>{
 $('m-wl').onclick=()=>{if(!MS.item)return;toggleWL({...MS.item});$('m-wl').classList.toggle('on',inWL(MS.item.id));};
 $('m-close').onclick=closeModal;
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal();});
-function closeModal(){$('modal').classList.remove('on');document.body.style.overflow='';setTimeout(()=>{$('mplayer').src='';},280);}
+function closeModal(){
+  clearTimeout(_failoverTimer);
+  $('modal').classList.remove('on');
+  document.body.style.overflow='';
+  // Reset player state
+  const pl=$('player-loading');
+  const pu=$('player-unavail');
+  if(pl) pl.classList.remove('hide');
+  if(pu) pu.classList.remove('show');
+  setTimeout(()=>{$('mplayer').src=''; $('mplayer').onload=null; $('mplayer').onerror=null;},280);
+}
 
 // ── NAVIGATION ──
 function goTo(pg){
