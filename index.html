@@ -171,7 +171,7 @@ img{display:block}
 #modal.on{opacity:1;pointer-events:all}
 .mbox{background:var(--card);border:1px solid var(--border2);border-radius:14px;overflow:hidden;width:100%;max-width:920px;max-height:94vh;overflow-y:auto;transform:translateY(18px) scale(.97);transition:transform .28s cubic-bezier(.34,1.1,.64,1);box-shadow:0 28px 90px rgba(0,0,0,.97);}
 #modal.on .mbox{transform:translateY(0) scale(1)}
-.srv-bar{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:7px 13px;background:#0a0a0c;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+.srv-bar{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:7px 13px;background:#0a0a0c;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:20;}
 .srv-bar::-webkit-scrollbar{display:none}
 .srv-label{font-size:.58rem;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;flex-shrink:0;margin-right:2px;font-weight:800}
 .srv{flex-shrink:0;background:var(--layer);border:1.5px solid var(--border);color:var(--sub);padding:4px 11px;border-radius:5px;font-family:var(--font);font-size:.69rem;font-weight:800;cursor:pointer;transition:all .18s;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
@@ -680,11 +680,11 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
     <div>
       <div class="srv-bar">
         <span class="srv-label">Server:</span>
-        <button class="srv on" data-s="s1">① 2Embed</button>
-        <button class="srv" data-s="s2">② AutoEmbed</button>
-        <button class="srv" data-s="s3">③ MoviesAPI</button>
-        <button class="srv" data-s="s4">④ VidSrc</button>
-        <button class="srv" data-s="s5">⑤ EmbedSu</button>
+        <button class="srv on" data-s="s1">① VidSrc</button>
+        <button class="srv" data-s="s2">② VidLink</button>
+        <button class="srv" data-s="s3">③ 2Embed</button>
+        <button class="srv" data-s="s4">④ EmbedSu</button>
+        <button class="srv" data-s="s5">⑤ AutoEmbed</button>
         <button class="srv" data-s="yt">🎞 Trailer</button>
       </div>
       <div class="player-tip">🔒 All ads & popups blocked · If a server shows any ad overlay, switch to another server above</div>
@@ -1446,35 +1446,35 @@ function getStreamSrc(srv){
         :'';
 
     case's1':
-      // 2embed — clean, no ads, wide coverage including Indian films
-      return isTV
-        ?`https://www.2embed.cc/embedtvfull/${tmdbId}&s=${season}&e=${episode}`
-        :`https://www.2embed.cc/embed/${movieId}`;
-
-    case's2':
-      // AutoEmbed — reliable, no popups, works for Bollywood/Tamil/Telugu
-      return isTV
-        ?`https://autoembed.co/tv/tmdb/${tmdbId}-${season}-${episode}`
-        :`https://autoembed.co/movie/tmdb/${movieId}`;
-
-    case's3':
-      // MoviesAPI — HD, clean, good Indian content coverage
-      return isTV
-        ?`https://moviesapi.club/tv/${tmdbId}-${season}-${episode}`
-        :`https://moviesapi.club/movie/${tmdbId}`;
-
-    case's4':
-      // VidSrc CC — proven clean primary
+      // VidSrc CC — most reliable, uses IMDB ID for movies (proven working)
       return isTV
         ?`https://vidsrc.cc/v2/embed/tv/${tmdbId}/${season}/${episode}?autoPlay=1`
         :`https://vidsrc.cc/v2/embed/movie/${movieId}?autoPlay=1`;
 
-    case's5':
-      // Embed.su — TMDB-based, clean player
+    case's2':
+      // VidLink — clean HD player, good Indian + global coverage (proven working)
+      return isTV
+        ?`https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=e50914&autoplay=true`
+        :`https://vidlink.pro/movie/${tmdbId}?primaryColor=e50914&autoplay=true`;
+
+    case's3':
+      // 2Embed — clean, no overlays, wide Indian coverage (proven working)
+      return isTV
+        ?`https://www.2embed.cc/embedtvfull/${tmdbId}&s=${season}&e=${episode}`
+        :`https://www.2embed.cc/embed/${movieId}`;
+
+    case's4':
+      // Embed.su — TMDB-based, clean ad-free player (proven working)
       return isTV
         ?`https://embed.su/embed/tv/${tmdbId}/${season}/${episode}`
         :`https://embed.su/embed/movie/${tmdbId}`;
-  }
+
+    case's5':
+      // AutoEmbed — good fallback for Bollywood/Tamil/Telugu (proven working)
+      return isTV
+        ?`https://autoembed.co/tv/tmdb/${tmdbId}-${season}-${episode}`
+        :`https://autoembed.co/movie/tmdb/${movieId}`;
+      }
   return '';
 }
 
