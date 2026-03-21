@@ -558,7 +558,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       <div class="plat-label">▶ Also Available On</div>
       <div class="plat-row" id="plat-row"></div>
       <div id="sim-sec" style="display:none">
-        <div class="sec-title" style="font-size:.98rem;margin:8px 0 7px">More Like This</div>
+        <div class="sec-title" id="sim-title" style="font-size:.98rem;margin:8px 0 7px">More Like This</div>
         <div id="sim-row"></div>
       </div>
     </div>
@@ -570,6 +570,166 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 <script>
 'use strict';
 // ── CONSTANTS ──
+
+// ── MULTI-LANGUAGE STRINGS ──
+const LANGS = {
+  en:{
+    home:'🏠 Home',movies:'🎬 Movies',series:'📺 Series',indian:'🇮🇳 Indian',livetv:'📡 Live TV',wl:'🔖 Watchlist',
+    newOTT:'🆕 New on OTT',newSeries:'📺 New Series Today',trending:'🔥 Trending',popularMovies:'🎬 Popular Movies',
+    popularSeries:'📺 Popular Series',topRated:'⭐ Top Rated',action:'💥 Action',comedy:'😂 Comedy',family:'🧒 Family',
+    watchNow:'▶ Watch Now',moreInfo:'ℹ More Info',search:'🔍  Search movies & shows…',
+    featuredToday:'⚡ Featured Today',savedWL:'✓ Saved to Watchlist',removedWL:'Removed from Watchlist',
+    nothingSaved:'Nothing Saved Yet',tapToSave:'Tap 🔖 on any title to save it here.',quality:'Quality',
+    server:'Server',season:'Season',episode:'Episode',loadEp:'▶ Load',cast:'Cast',alsoOn:'▶ Also Available On',
+    moreLike:'More Like This',noContent:'No content found.',noTrailer:'No trailer found',closeAd:'✕ Close Ad',
+    bollywood:'🌟 Bollywood',tamil:'🎥 Tamil',telugu:'🎞️ Telugu',malayalam:'🎦 Malayalam',kannada:'🎬 Kannada',
+    bengali:'🎭 Bengali',webSeries:'📺 Indian Web Series',liveDesc:'Click any channel to stream here.',
+    nowPlaying:'🎬 Now Playing',popular:'🔥 Popular',thriller:'🔪 Thriller',romance:'❤️ Romance',
+    scifi:'🚀 Sci-Fi',documentary:'🌍 Documentary',kids:'🧒 Family & Kids',trendingShows:'🔥 Trending Shows',
+    topRatedSeries:'⭐ Top Rated',airingToday:'📡 Airing Today',anime:'🎌 Anime',crime:'🔪 Crime & Thriller',
+    fantasy:'🧬 Sci-Fi & Fantasy',kdrama:'🇰🇷 K-Drama',kidsFamily:'🧒 Kids & Family',
+  },
+  ta:{
+    home:'🏠 முகப்பு',movies:'🎬 திரைப்படங்கள்',series:'📺 தொடர்கள்',indian:'🇮🇳 இந்திய',livetv:'📡 நேரலை',wl:'🔖 பட்டியல்',
+    newOTT:'🆕 OTT-ல் புதியவை',newSeries:'📺 இன்று புதிய தொடர்',trending:'🔥 பிரபலமானவை',popularMovies:'🎬 பிரபல படங்கள்',
+    popularSeries:'📺 பிரபல தொடர்கள்',topRated:'⭐ சிறந்த மதிப்பீடு',action:'💥 சாகசம்',comedy:'😂 நகைச்சுவை',family:'🧒 குடும்பம்',
+    watchNow:'▶ இப்போது பார்',moreInfo:'ℹ மேலும்',search:'🔍  திரைப்படம் தேடு…',featuredToday:'⚡ இன்றைய சிறப்பு',
+    savedWL:'✓ பட்டியலில் சேர்க்கப்பட்டது',removedWL:'பட்டியலில் இருந்து நீக்கப்பட்டது',
+    nothingSaved:'ஒன்றும் சேமிக்கப்படவில்லை',tapToSave:'🔖 அழுத்தி சேமிக்கவும்',quality:'தரம்',
+    server:'சர்வர்',season:'பருவம்',episode:'அத்தியாயம்',loadEp:'▶ ஏற்று',cast:'நடிகர்கள்',alsoOn:'▶ இங்கேயும் காண்க',
+    moreLike:'இதுபோன்றவை',noContent:'உள்ளடக்கம் இல்லை',noTrailer:'டிரெய்லர் இல்லை',
+    bollywood:'🌟 பாலிவுட்',tamil:'🎥 தமிழ்',telugu:'🎞️ தெலுங்கு',malayalam:'🎦 மலையாளம்',
+    kannada:'🎬 கன்னடம்',bengali:'🎭 வங்காளம்',webSeries:'📺 இந்திய வலை தொடர்',liveDesc:'சேனலை அழுத்தி நேரலை காண்க.',
+    nowPlaying:'🎬 தியேட்டரில்',popular:'🔥 பிரபலம்',thriller:'🔪 த்ரில்லர்',romance:'❤️ காதல்',
+    scifi:'🚀 அறிவியல்',documentary:'🌍 ஆவணம்',kids:'🧒 குடும்பம்',trendingShows:'🔥 பிரபல தொடர்கள்',
+    topRatedSeries:'⭐ சிறந்தவை',airingToday:'📡 இன்று ஒளிபரப்பு',anime:'🎌 அனிமே',crime:'🔪 குற்றம்',
+    fantasy:'🧬 கற்பனை',kdrama:'🇰🇷 கே-டிராமா',kidsFamily:'🧒 குழந்தைகள்',
+  },
+  hi:{
+    home:'🏠 होम',movies:'🎬 फिल्में',series:'📺 सीरीज',indian:'🇮🇳 भारतीय',livetv:'📡 लाइव टीवी',wl:'🔖 सूची',
+    newOTT:'🆕 OTT पर नए',newSeries:'📺 आज की नई सीरीज',trending:'🔥 ट्रेंडिंग',popularMovies:'🎬 लोकप्रिय फिल्में',
+    popularSeries:'📺 लोकप्रिय सीरीज',topRated:'⭐ टॉप रेटेड',action:'💥 एक्शन',comedy:'😂 कॉमेडी',family:'🧒 परिवार',
+    watchNow:'▶ अभी देखें',moreInfo:'ℹ अधिक जानें',search:'🔍  फिल्म या सीरीज खोजें…',featuredToday:'⚡ आज की विशेष',
+    savedWL:'✓ सूची में जोड़ा',removedWL:'सूची से हटाया',nothingSaved:'कुछ सेव नहीं है',tapToSave:'🔖 दबाकर सेव करें',
+    quality:'गुणवत्ता',server:'सर्वर',season:'सीज़न',episode:'एपिसोड',loadEp:'▶ लोड करें',
+    cast:'कलाकार',alsoOn:'▶ यहाँ भी देखें',moreLike:'इससे मिलते-जुलते',noContent:'कोई सामग्री नहीं',noTrailer:'ट्रेलर नहीं मिला',
+    bollywood:'🌟 बॉलीवुड',tamil:'🎥 तमिल',telugu:'🎞️ तेलुगू',malayalam:'🎦 मलयालम',
+    kannada:'🎬 कन्नड़',bengali:'🎭 बंगाली',webSeries:'📺 भारतीय वेब सीरीज',liveDesc:'चैनल दबाएं और सीधे देखें।',
+    nowPlaying:'🎬 अभी चल रही हैं',popular:'🔥 लोकप्रिय',thriller:'🔪 थ्रिलर',romance:'❤️ रोमांस',
+    scifi:'🚀 साइंस फिक्शन',documentary:'🌍 डॉक्यूमेंट्री',kids:'🧒 परिवार',trendingShows:'🔥 ट्रेंडिंग शो',
+    topRatedSeries:'⭐ टॉप रेटेड',airingToday:'📡 आज प्रसारित',anime:'🎌 एनिमे',crime:'🔪 क्राइम',
+    fantasy:'🧬 फंतासी',kdrama:'🇰🇷 के-ड्रामा',kidsFamily:'🧒 बच्चे और परिवार',
+  },
+  ml:{
+    home:'🏠 ഹോം',movies:'🎬 സിനിമകൾ',series:'📺 സീരീസ്',indian:'🇮🇳 ഇന്ത്യൻ',livetv:'📡 തൽസമയം',wl:'🔖 ലിസ്റ്റ്',
+    newOTT:'🆕 OTT-ൽ പുതിയത്',newSeries:'📺 ഇന്ന് പുതിയ സീരീസ്',trending:'🔥 ട്രെൻഡിങ്',popularMovies:'🎬 ജനപ്രിയ സിനിമകൾ',
+    popularSeries:'📺 ജനപ്രിയ സീരീസ്',topRated:'⭐ ഉയർന്ന റേറ്റിങ്',action:'💥 ആക്ഷൻ',comedy:'😂 കോമഡി',family:'🧒 കുടുംബം',
+    watchNow:'▶ ഇപ്പോൾ കാണുക',moreInfo:'ℹ കൂടുതൽ',search:'🔍  സിനിമ തിരയുക…',featuredToday:'⚡ ഇന്നത്തെ ഫീച്ചർഡ്',
+    savedWL:'✓ ലിസ്റ്റിൽ ചേർത്തു',removedWL:'ലിസ്റ്റിൽ നിന്ന് നീക്കി',nothingSaved:'ഒന്നും സംരക്ഷിച്ചിട്ടില്ല',
+    tapToSave:'🔖 ടാപ്പ് ചെയ്ത് സംരക്ഷിക്കുക',quality:'ഗുണനിലവാരം',server:'സർവ്വർ',season:'സീസൺ',episode:'എപ്പിസോഡ്',
+    loadEp:'▶ ലോഡ്',cast:'അഭിനേതാക്കൾ',alsoOn:'▶ ഇവിടെയും കാണുക',moreLike:'ഇതുപോലുള്ളവ',
+    noContent:'ഉള്ളടക്കം ലഭ്യമല്ല',noTrailer:'ട്രെയിലർ ലഭ്യമല്ല',
+    bollywood:'🌟 ബോളിവുഡ്',tamil:'🎥 തമിഴ്',telugu:'🎞️ തെലുഗു',malayalam:'🎦 മലയാളം',
+    kannada:'🎬 കന്നഡ',bengali:'🎭 ബംഗാളി',webSeries:'📺 ഇന്ത്യൻ വെബ് സീരീസ്',liveDesc:'ചാനൽ ടാപ്പ് ചെയ്ത് തൽസമയം കാണുക.',
+    nowPlaying:'🎬 ഇപ്പോൾ പ്രദർശിക്കുന്നു',popular:'🔥 ജനപ്രിയം',thriller:'🔪 ത്രില്ലർ',romance:'❤️ പ്രണയം',
+    scifi:'🚀 ശാസ്ത്രകഥ',documentary:'🌍 ഡോക്യുമെൻ്ററി',kids:'🧒 കുടുംബം',trendingShows:'🔥 ട്രെൻഡിങ് ഷോകൾ',
+    topRatedSeries:'⭐ ഉയർന്ന റേറ്റിങ്',airingToday:'📡 ഇന്ന് സംപ്രേഷണം',anime:'🎌 ആനിമേ',crime:'🔪 ക്രൈം',
+    fantasy:'🧬 ഫാൻ്റസി',kdrama:'🇰🇷 കെ-ഡ്രാമ',kidsFamily:'🧒 കുട്ടികൾ',
+  },
+  te:{
+    home:'🏠 హోమ్',movies:'🎬 సినిమాలు',series:'📺 సీరీస్',indian:'🇮🇳 భారతీయ',livetv:'📡 లైవ్ టీవీ',wl:'🔖 జాబితా',
+    newOTT:'🆕 OTT లో కొత్తవి',newSeries:'📺 నేటి కొత్త సీరీస్',trending:'🔥 ట్రెండింగ్',popularMovies:'🎬 జనప్రియ సినిమాలు',
+    popularSeries:'📺 జనప్రియ సీరీస్',topRated:'⭐ టాప్ రేటెడ్',action:'💥 యాక్షన్',comedy:'😂 కామెడీ',family:'🧒 కుటుంబం',
+    watchNow:'▶ ఇప్పుడు చూడు',moreInfo:'ℹ మరింత',search:'🔍  సినిమా వెతకండి…',featuredToday:'⚡ నేటి విశేషం',
+    savedWL:'✓ జాబితాకు జోడించబడింది',removedWL:'జాబితా నుండి తీసివేయబడింది',nothingSaved:'ఏమీ సేవ్ కాలేదు',
+    tapToSave:'🔖 నొక్కి సేవ్ చేయండి',quality:'నాణ్యత',server:'సర్వర్',season:'సీజన్',episode:'ఎపిసోడ్',
+    loadEp:'▶ లోడ్',cast:'నటులు',alsoOn:'▶ ఇక్కడ కూడా చూడండి',moreLike:'ఇవి కూడా చూడండి',
+    noContent:'కంటెంట్ అందుబాటులో లేదు',noTrailer:'ట్రెయిలర్ లేదు',
+    bollywood:'🌟 బాలీవుడ్',tamil:'🎥 తమిళ',telugu:'🎞️ తెలుగు',malayalam:'🎦 మలయాళం',
+    kannada:'🎬 కన్నడ',bengali:'🎭 బెంగాలి',webSeries:'📺 భారతీయ వెబ్ సీరీస్',liveDesc:'ఛానల్ నొక్కి నేరుగా చూడండి.',
+    nowPlaying:'🎬 ప్రస్తుతం ప్రదర్శన',popular:'🔥 జనప్రియం',thriller:'🔪 థ్రిల్లర్',romance:'❤️ రొమాన్స్',
+    scifi:'🚀 సైన్స్ ఫిక్షన్',documentary:'🌍 డాక్యుమెంటరీ',kids:'🧒 కుటుంబం',trendingShows:'🔥 ట్రెండింగ్ షోలు',
+    topRatedSeries:'⭐ టాప్ రేటెడ్',airingToday:'📡 నేడు ప్రసారం',anime:'🎌 యానిమే',crime:'🔪 క్రైమ్',
+    fantasy:'🧬 ఫాంటసీ',kdrama:'🇰🇷 కే-డ్రామా',kidsFamily:'🧒 పిల్లలు',
+  },
+  kn:{
+    home:'🏠 ಮನೆ',movies:'🎬 ಚಲನಚಿತ್ರಗಳು',series:'📺 ಸರಣಿಗಳು',indian:'🇮🇳 ಭಾರತೀಯ',livetv:'📡 ನೇರ ಪ್ರಸಾರ',wl:'🔖 ಪಟ್ಟಿ',
+    newOTT:'🆕 OTT ನಲ್ಲಿ ಹೊಸದು',newSeries:'📺 ಇಂದಿನ ಹೊಸ ಸರಣಿ',trending:'🔥 ಟ್ರೆಂಡಿಂಗ್',popularMovies:'🎬 ಜನಪ್ರಿಯ ಚಲನಚಿತ್ರಗಳು',
+    popularSeries:'📺 ಜನಪ್ರಿಯ ಸರಣಿಗಳು',topRated:'⭐ ಉತ್ತಮ ರೇಟಿಂಗ್',action:'💥 ಆ್ಯಕ್ಷನ್',comedy:'😂 ಕಾಮೆಡಿ',family:'🧒 ಕುಟುಂಬ',
+    watchNow:'▶ ಈಗ ನೋಡಿ',moreInfo:'ℹ ಹೆಚ್ಚು',search:'🔍  ಚಿತ್ರ ಹುಡುಕಿ…',featuredToday:'⚡ ಇಂದಿನ ವಿಶೇಷ',
+    savedWL:'✓ ಪಟ್ಟಿಗೆ ಸೇರಿಸಲಾಗಿದೆ',removedWL:'ಪಟ್ಟಿಯಿಂದ ತೆಗೆದುಹಾಕಲಾಗಿದೆ',nothingSaved:'ಏನೂ ಸೇವ್ ಆಗಿಲ್ಲ',
+    tapToSave:'🔖 ಒತ್ತಿ ಸೇವ್ ಮಾಡಿ',quality:'ಗುಣಮಟ್ಟ',server:'ಸರ್ವರ್',season:'ಸೀಸನ್',episode:'ಎಪಿಸೋಡ್',
+    loadEp:'▶ ಲೋಡ್',cast:'ನಟರು',alsoOn:'▶ ಇಲ್ಲಿಯೂ ನೋಡಿ',moreLike:'ಇಂಥವು',noContent:'ವಿಷಯ ಲಭ್ಯವಿಲ್ಲ',noTrailer:'ಟ್ರೈಲರ್ ಇಲ್ಲ',
+    bollywood:'🌟 ಬಾಲಿವುಡ್',tamil:'🎥 ತಮಿಳು',telugu:'🎞️ ತೆಲುಗು',malayalam:'🎦 ಮಲಯಾಳಂ',
+    kannada:'🎬 ಕನ್ನಡ',bengali:'🎭 ಬಂಗಾಳಿ',webSeries:'📺 ಭಾರತೀಯ ವೆಬ್ ಸರಣಿ',liveDesc:'ಚಾನಲ್ ಒತ್ತಿ ನೇರ ಪ್ರಸಾರ ನೋಡಿ.',
+    nowPlaying:'🎬 ಈಗ ಪ್ರದರ್ಶನ',popular:'🔥 ಜನಪ್ರಿಯ',thriller:'🔪 ಥ್ರಿಲ್ಲರ್',romance:'❤️ ಪ್ರೇಮ',
+    scifi:'🚀 ವಿಜ್ಞಾನ ಕಥೆ',documentary:'🌍 ಸಾಕ್ಷ್ಯಚಿತ್ರ',kids:'🧒 ಕುಟುಂಬ',trendingShows:'🔥 ಟ್ರೆಂಡಿಂಗ್ ಶೋಗಳು',
+    topRatedSeries:'⭐ ಉತ್ತಮ ರೇಟಿಂಗ್',airingToday:'📡 ಇಂದು ಪ್ರಸಾರ',anime:'🎌 ಅನಿಮೆ',crime:'🔪 ಅಪರಾಧ',
+    fantasy:'🧬 ಫ್ಯಾಂಟಸಿ',kdrama:'🇰🇷 ಕೆ-ಡ್ರಾಮಾ',kidsFamily:'🧒 ಮಕ್ಕಳು',
+  },
+  bn:{
+    home:'🏠 হোম',movies:'🎬 সিনেমা',series:'📺 সিরিজ',indian:'🇮🇳 ভারতীয়',livetv:'📡 লাইভ টিভি',wl:'🔖 তালিকা',
+    newOTT:'🆕 OTT-তে নতুন',newSeries:'📺 আজকের নতুন সিরিজ',trending:'🔥 ট্রেন্ডিং',popularMovies:'🎬 জনপ্রিয় সিনেমা',
+    popularSeries:'📺 জনপ্রিয় সিরিজ',topRated:'⭐ শীর্ষ রেটেড',action:'💥 অ্যাকশন',comedy:'😂 কমেডি',family:'🧒 পরিবার',
+    watchNow:'▶ এখনই দেখুন',moreInfo:'ℹ আরও',search:'🔍  সিনেমা খুঁজুন…',featuredToday:'⚡ আজকের বিশেষ',
+    savedWL:'✓ তালিকায় যোগ হয়েছে',removedWL:'তালিকা থেকে সরানো হয়েছে',nothingSaved:'কিছু সেভ হয়নি',
+    tapToSave:'🔖 ট্যাপ করে সেভ করুন',quality:'মান',server:'সার্ভার',season:'সিজন',episode:'এপিসোড',
+    loadEp:'▶ লোড',cast:'অভিনেতা',alsoOn:'▶ এখানেও দেখুন',moreLike:'এরকম আরও',noContent:'কোনো কন্টেন্ট নেই',noTrailer:'ট্রেলার নেই',
+    bollywood:'🌟 বলিউড',tamil:'🎥 তামিল',telugu:'🎞️ তেলুগু',malayalam:'🎦 মালায়ালাম',
+    kannada:'🎬 কান্নাড়া',bengali:'🎭 বাংলা',webSeries:'📺 ভারতীয় ওয়েব সিরিজ',liveDesc:'চ্যানেল ট্যাপ করুন এবং সরাসরি দেখুন।',
+    nowPlaying:'🎬 এখন চলছে',popular:'🔥 জনপ্রিয়',thriller:'🔪 থ্রিলার',romance:'❤️ রোমান্স',
+    scifi:'🚀 বিজ্ঞান কল্পকাহিনী',documentary:'🌍 প্রামাণ্যচিত্র',kids:'🧒 পরিবার',trendingShows:'🔥 ট্রেন্ডিং শো',
+    topRatedSeries:'⭐ শীর্ষ রেটেড',airingToday:'📡 আজ সম্প্রচার',anime:'🎌 আনিমে',crime:'🔪 ক্রাইম',
+    fantasy:'🧬 ফ্যান্টাসি',kdrama:'🇰🇷 কে-ড্রামা',kidsFamily:'🧒 শিশু',
+  },
+};
+
+let LANG = localStorage.getItem('rf_lang')||'en';
+let L = LANGS[LANG]||LANGS.en;
+
+function changeLang(code){
+  LANG=code; L=LANGS[code]||LANGS.en;
+  localStorage.setItem('rf_lang',code);
+  applyLang();
+}
+
+function applyLang(){
+  // Update nav tabs
+  const tabMap={home:'home',movies:'movies',series:'series',indian:'indian',livetv:'livetv',wl:'wl'};
+  document.querySelectorAll('.tab').forEach(t=>{
+    const pg=t.dataset.pg;
+    if(L[pg]) t.textContent=L[pg];
+  });
+  // Update search placeholder
+  const si=document.getElementById('srch-in');
+  if(si) si.placeholder=L.search;
+  // Update hero buttons
+  const hp=document.getElementById('hero-play');
+  const hi=document.getElementById('hero-info');
+  if(hp) hp.innerHTML='▶ '+L.watchNow.replace('▶ ','');
+  if(hi) hi.innerHTML=L.moreInfo;
+  // Update section titles
+  const secMap={
+    'r-new-ott':L.newOTT,'r-new-tv':L.newSeries,'r-trend':L.trending,
+    'r-pmov':L.popularMovies,'r-ptv':L.popularSeries,'r-topx':L.topRated,
+    'r-act':L.action,'r-com':L.comedy,'r-fam':L.family,
+  };
+  document.querySelectorAll('.sec-title').forEach(el=>{
+    const row=el.closest('.section')?.querySelector('.row');
+    if(row&&secMap[row.id]) el.firstChild.textContent=secMap[row.id];
+  });
+  // Live TV description
+  const lpg=document.querySelector('#pg-livetv .pg-head p');
+  if(lpg) lpg.textContent=L.liveDesc;
+  // Quality bar label
+  document.querySelectorAll('.qual-label').forEach(e=>e.textContent=L.quality+':');
+  document.querySelectorAll('.srv-label').forEach(e=>e.textContent=L.server+':');
+}
+
+// Apply saved language on load
+document.getElementById('lang-select').value=LANG;
+applyLang();
+
 const KEY='e45a2761e3940b71bada28b8c238fd85';
 const BASE='https://api.themoviedb.org/3';
 const IMG='https://image.tmdb.org/t/p/';
@@ -618,8 +778,8 @@ function inWL(id){return getWL().some(i=>i.id===id);}
 function toggleWL(item){
   let wl=getWL();
   const i=wl.findIndex(x=>x.id===item.id);
-  if(i>-1){wl.splice(i,1);toast('Removed from Watchlist','');}
-  else{wl.unshift({id:item.id,title:item.title||item.name||'',poster:item.poster_path||'',media_type:item.media_type||'movie',rating:item.vote_average||0,year:(item.release_date||item.first_air_date||'').slice(0,4)});toast('✓ Saved to Watchlist','ok');}
+  if(i>-1){wl.splice(i,1);toast(L.removedWL||'Removed from Watchlist','');}
+  else{wl.unshift({id:item.id,title:item.title||item.name||'',poster:item.poster_path||'',media_type:item.media_type||'movie',rating:item.vote_average||0,year:(item.release_date||item.first_air_date||'').slice(0,4)});toast(L.savedWL||'✓ Saved to Watchlist','ok');}
   saveWL(wl);refreshBadge();syncWL(item.id);
 }
 function refreshBadge(){const n=getWL().length,el=$('wl-badge');el.textContent=n;el.classList.toggle('on',n>0);}
@@ -649,7 +809,12 @@ function makeCard(item,ft){
   const wl=inWL(item.id);
   const d=document.createElement('div');
   d.className='card';
+  // Check if newly released (within 14 days)
+  const releaseDate=item.release_date||item.first_air_date||'';
+  const isNew=item._isNew||(releaseDate&&((Date.now()-new Date(releaseDate).getTime())<14*24*60*60*1000));
+  const newBadge=isNew?'<div class="new-badge">🆕 NEW</div>':'';
   d.innerHTML=`<img src="${poster}" alt="${title}" loading="lazy" decoding="async" onerror="this.src='${noImg(title)}'"/>
+    ${newBadge}
     <div class="card-play">▶</div>
     <div class="card-ov"><div class="card-title">${title}</div><div class="card-star">★ ${stars}</div><div class="card-type">${isTV?'Series':'Movie'}</div></div>
     <button class="card-wl${wl?' on':''}" data-id="${item.id}" title="${wl?'Remove':'Add to Watchlist'}">🔖</button>`;
@@ -723,12 +888,43 @@ function buildGBar(barId,genres,type,rowIds,isLang=false){
 // ── PAGE LOADERS — all parallel, faster ──
 const PL={};
 
+// ── GET TODAY'S DATE for real-time new releases ──
+function todayStr(){return new Date().toISOString().split('T')[0];}
+function sevenDaysAgo(){const d=new Date();d.setDate(d.getDate()-7);return d.toISOString().split('T')[0];}
+function thirtyDaysAgo(){const d=new Date();d.setDate(d.getDate()-30);return d.toISOString().split('T')[0];}
+
+async function loadNewOTT(){
+  // Fetch movies released in the last 7 days, sorted by release date DESC (newest first)
+  const today=todayStr();
+  const ago7=sevenDaysAgo();
+  const ago30=thirtyDaysAgo();
+  const [newMov,newTV]=await Promise.all([
+    api(`${BASE}/discover/movie?api_key=${KEY}&sort_by=release_date.desc&release_date.gte=${ago30}&release_date.lte=${today}&vote_count.gte=5&with_release_type=3|4|5|6`),
+    api(`${BASE}/discover/tv?api_key=${KEY}&sort_by=first_air_date.desc&first_air_date.gte=${ago30}&first_air_date.lte=${today}&vote_count.gte=2`),
+  ]);
+  // Merge and sort by date, newest first
+  const movies=(newMov?.results||[]).filter(isClean).map(i=>({...i,media_type:'movie',_isNew:true}));
+  const tvs=(newTV?.results||[]).filter(isClean).map(i=>({...i,media_type:'tv',_isNew:true}));
+  const combined=[...movies,...tvs].sort((a,b)=>{
+    const da=a.release_date||a.first_air_date||'';
+    const db=b.release_date||b.first_air_date||'';
+    return db.localeCompare(da); // newest first
+  }).slice(0,30);
+  fillRow('r-new-ott',combined,null);
+  fillRow('r-new-tv',tvs.slice(0,20),'tv');
+  // Update refresh timestamp
+  const label=document.getElementById('refresh-label');
+  if(label) label.title='Last updated: '+new Date().toLocaleTimeString();
+}
+
+let _homeRefreshInterval=null;
+
 async function loadHome(){
   if(PL.home)return;PL.home=true;
-  const rows=['r-trend','r-pmov','r-ptv','r-topx','r-act','r-com','r-fam'];
+  const rows=['r-new-ott','r-new-tv','r-trend','r-pmov','r-ptv','r-topx','r-act','r-com','r-fam'];
   rows.forEach(id=>skel(id));
 
-  // Fire ALL requests simultaneously
+  // Fire ALL requests simultaneously including new OTT
   const [gm,gtv,trend,pop,tv,top,act,com,fam]=await Promise.all([
     api(`${BASE}/genre/movie/list?api_key=${KEY}`),
     api(`${BASE}/genre/tv/list?api_key=${KEY}`),
@@ -742,10 +938,13 @@ async function loadHome(){
   ]);
 
   [...(gm?.genres||[]),...(gtv?.genres||[])].forEach(g=>GM[g.id]=g.name);
-  buildGBar('home-gbar',MG,'movie',rows);
+  buildGBar('home-gbar',MG,'movie',['r-trend','r-pmov','r-ptv','r-topx','r-act','r-com','r-fam']);
 
   heroItems=safe(trend?.results,'').filter(i=>i.backdrop_path).slice(0,8);
   if(heroItems.length){showHero(heroItems[0]);buildDots();startTick();}
+
+  // Load new OTT separately (don't block main content)
+  loadNewOTT();
 
   fillRow('r-trend',safe(trend?.results,''),null);
   fillRow('r-pmov',safe(pop?.results,'movie'),'movie');
@@ -754,6 +953,17 @@ async function loadHome(){
   fillRow('r-act',safe(act?.results,'movie'),'movie');
   fillRow('r-com',safe(com?.results,'movie'),'movie');
   fillRow('r-fam',safe(fam?.results,'movie'),'movie');
+
+  // Auto-refresh new OTT every 10 minutes
+  if(_homeRefreshInterval) clearInterval(_homeRefreshInterval);
+  _homeRefreshInterval=setInterval(()=>{
+    // Clear cache for new OTT so we always get fresh data
+    const today=todayStr();const ago30=thirtyDaysAgo();
+    const u1=`${BASE}/discover/movie?api_key=${KEY}&sort_by=release_date.desc&release_date.gte=${ago30}&release_date.lte=${today}&vote_count.gte=5&with_release_type=3|4|5|6`;
+    const u2=`${BASE}/discover/tv?api_key=${KEY}&sort_by=first_air_date.desc&first_air_date.gte=${ago30}&first_air_date.lte=${today}&vote_count.gte=2`;
+    CACHE.delete(u1+SAFE); CACHE.delete(u2+SAFE);
+    loadNewOTT();
+  }, 10*60*1000); // 10 minutes
 }
 
 async function loadMovies(force=false){
@@ -821,7 +1031,7 @@ function renderWL(){
   grid.innerHTML='';
   if(!wl.length){
     sub.textContent='Your saved movies and shows';
-    grid.innerHTML=`<div class="wl-empty"><div class="wl-empty-ico">🔖</div><h3>Nothing Saved Yet</h3><p>Tap 🔖 on any title to save it here.</p></div>`;
+    grid.innerHTML=`<div class="wl-empty"><div class="wl-empty-ico">🔖</div><h3>${L.nothingSaved||'Nothing Saved Yet'}</h3><p>${L.tapToSave||'Tap 🔖 on any title to save it here.'}</p></div>`;
     return;
   }
   sub.textContent=`${wl.length} title${wl.length!==1?'s':''} saved`;
@@ -961,7 +1171,7 @@ async function openModal(item){
   }
   if(cred){
     const cast=(cred.cast||[]).slice(0,5).map(c=>c.name).join(', ');
-    $('m-cast').innerHTML=cast?`<strong>Cast:</strong> ${cast}`:'';
+    $('m-cast').innerHTML=cast?`<strong>${L.cast||'Cast'}:</strong> ${cast}`:'';
   }
   if(vids?.results?.length){
     const t=vids.results.find(v=>v.site==='YouTube'&&v.type==='Trailer')||vids.results.find(v=>v.site==='YouTube');
@@ -1002,32 +1212,66 @@ document.querySelectorAll('.srv[data-s]').forEach(btn=>{
 });
 
 // Stream URLs — Indian movies/series work on all these servers
+let QUALITY='1080'; // default quality
+
 function loadStream(srv){
   const{item,isTV,trailerKey,season,episode}=MS;
   if(!item)return;
   const id=item.id;let src='';
+
+  // Quality params for servers that support them
+  const qParam=QUALITY==='4k'?'&quality=4k':QUALITY==='720'?'&quality=720':QUALITY==='480'?'&quality=480':QUALITY==='auto'?'':'&quality=1080';
+
   switch(srv){
     case'yt':
-      if(trailerKey)src=`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0&modestbranding=1`;
-      else{toast('No trailer found','warn');return;}break;
+      if(trailerKey)src=`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0&modestbranding=1&vq=${QUALITY==='4k'?'hd2160':QUALITY==='1080'?'hd1080':QUALITY==='720'?'hd720':'large'}`;
+      else{toast(L.noTrailer||'No trailer found','warn');return;}break;
     case'vs1':
-      // VidSrc CC — works for Indian movies
-      src=isTV?`https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}`:`https://vidsrc.cc/v2/embed/movie/${id}`;break;
+      // VidSrc CC — best quality, 4K when available
+      src=isTV
+        ?`https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}?autoPlay=1`
+        :`https://vidsrc.cc/v2/embed/movie/${id}?autoPlay=1`;
+      break;
     case'vs2':
-      // VidSrc XYZ — good for Indian content
-      src=isTV?`https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`:`https://vidsrc.xyz/embed/movie?tmdb=${id}`;break;
+      // VidSrc XYZ — supports HD/4K
+      src=isTV
+        ?`https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}&autoplay=true`
+        :`https://vidsrc.xyz/embed/movie?tmdb=${id}&autoplay=true`;
+      break;
     case'vs3':
-      // VidSrc.to — alternate
-      src=isTV?`https://vidsrc.to/embed/tv/${id}/${season}/${episode}`:`https://vidsrc.to/embed/movie/${id}`;break;
+      // VidSrc.to — alternate, good quality
+      src=isTV
+        ?`https://vidsrc.to/embed/tv/${id}/${season}/${episode}`
+        :`https://vidsrc.to/embed/movie/${id}`;
+      break;
     case'vl':
-      // VidLink — clean, works for Indian
-      src=isTV?`https://vidlink.pro/tv/${id}/${season}/${episode}`:`https://vidlink.pro/movie/${id}`;break;
+      // VidLink — clean UI, HD+
+      src=isTV
+        ?`https://vidlink.pro/tv/${id}/${season}/${episode}?primaryColor=e50914&secondaryColor=e50914`
+        :`https://vidlink.pro/movie/${id}?primaryColor=e50914&secondaryColor=e50914`;
+      break;
     case'se':
-      // SuperEmbed — good Indian coverage
-      src=isTV?`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`:`https://multiembed.mov/?video_id=${id}&tmdb=1`;break;
+      // SuperEmbed — multilingual, good Indian coverage
+      src=isTV
+        ?`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`
+        :`https://multiembed.mov/?video_id=${id}&tmdb=1`;
+      break;
   }
   $('mplayer').src=src;
 }
+
+// Quality button handlers
+document.querySelectorAll('.qbtn').forEach(btn=>{
+  btn.onclick=()=>{
+    QUALITY=btn.dataset.q;
+    document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    // Reload with new quality
+    const activeSrv=document.querySelector('.srv.on')?.dataset.s||'vs1';
+    loadStream(activeSrv);
+    toast('Quality: '+btn.textContent,'ok');
+  };
+});
 
 $('m-wl').onclick=()=>{if(!MS.item)return;toggleWL({...MS.item});$('m-wl').classList.toggle('on',inWL(MS.item.id));};
 $('m-close').onclick=closeModal;
@@ -1090,6 +1334,9 @@ document.addEventListener('keydown',e=>{
 });
 
 // ── INIT ──
+// Apply language immediately
+document.getElementById('lang-select').value=LANG;
+applyLang();
 loadHome();
 </script>
 </body>
