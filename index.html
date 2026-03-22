@@ -363,18 +363,11 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 (function(){
   'use strict';
 
-  /* ══════════════════════════════════════════════════════
-     ROOTFLIK NUCLEAR AD SHIELD v3
-     Every single method ads use — blocked.
-  ══════════════════════════════════════════════════════ */
-
-  // 1. Kill window.open — period. No exceptions.
   window.open = function(){ return null; };
   window.alert = function(){};
   window.confirm = function(){ return false; };
   window.prompt = function(){ return null; };
 
-  // 2. Block all external navigation
   document.addEventListener('click', function(e){
     const a = e.target.closest('a[href]');
     if(!a) return;
@@ -389,39 +382,28 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
     }
   }, true);
 
-  // 3. Block form submissions to external sites
   document.addEventListener('submit', function(e){
     if(e.target.action && !e.target.action.includes(location.hostname)) e.preventDefault();
   }, true);
 
-  // 4. Block ALL postMessages from iframes
   window.addEventListener('message', function(e){
-    // Only allow messages from our own origin
     if(e.origin !== location.origin){
       e.stopImmediatePropagation();
     }
   }, true);
 
-  // 5. Pointer-events shield over iframe — catches overlay ad clicks
-  // The iframe is wrapped in a div; clicks on the iframe corner ads are intercepted
   function addIframeShield(){
     const player = document.getElementById('mplayer');
     if(!player) return;
     const wrap = player.parentElement;
     if(!wrap) return;
 
-    // Remove old shields
     wrap.querySelectorAll('.rf-shield').forEach(s=>s.remove());
 
-    // Create corner shields — ads appear in corners/edges, video controls are center
     const positions = [
-      // Top strip — where notification overlays appear
       {top:'0',left:'0',right:'0',height:'80px'},
-      // Bottom-right corner — where most ad CTAs appear
       {bottom:'40px',right:'0',width:'200px',height:'80px'},
-      // Top-right corner
       {top:'0',right:'0',width:'180px',height:'100px'},
-      // Top-left corner
       {top:'0',left:'0',width:'180px',height:'100px'},
     ];
 
@@ -439,7 +421,6 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
     });
   }
 
-  // 6. MutationObserver — nuke any overlay element the moment it's added to DOM
   const BAD_KEYWORDS = [
     'missed','video call','join now','click here',
     'casino','bet','adult','webcam','dating',
@@ -463,10 +444,8 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   }
 
   function scanAndNuke(){
-    // Kill by text content in overlay-positioned elements
     document.querySelectorAll('div,section,article,aside').forEach(function(el){
       try{
-        // Skip our own elements
         if(el.id && ['nav','modal','toast','hero','mplayer','player-wrap'].includes(el.id)) return;
         if(el.closest('#nav,#modal,#toast,#hero,.mbox,.pg')) return;
 
@@ -474,7 +453,6 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
         const z = parseInt(s.zIndex)||0;
         const pos = s.position;
 
-        // High z-index floating elements that aren't ours = ads
         if((pos==='fixed'||pos==='absolute') && z>100){
           const txt = (el.innerText||el.textContent||'').toLowerCase().trim();
           if(txt.length > 0 && txt.length < 500){
@@ -482,13 +460,11 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
               nukeEl(el); return;
             }
           }
-          // Even without text match, kill very high z-index overlays that we didn't create
           if(z>9000){ nukeEl(el); return; }
         }
       }catch(err){}
     });
 
-    // Kill by suspicious selectors
     BAD_SELECTORS.forEach(function(sel){
       try{
         document.querySelectorAll(sel).forEach(function(el){
@@ -500,7 +476,6 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
     });
   }
 
-  // Run continuously
   const _obs = new MutationObserver(function(){
     scanAndNuke();
   });
@@ -508,7 +483,6 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   function startObserver(){
     _obs.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
     scanAndNuke();
-    // Also add iframe shields
     addIframeShield();
   }
 
@@ -518,9 +492,9 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
     startObserver();
   }
 
-  // Re-add iframe shields whenever player src changes
   window.addEventListener('focus', function(){ scanAndNuke(); addIframeShield(); });
-
+  // expose for use in main script
+  window._addIframeShield = addIframeShield;
 })();
 </script>
 
@@ -640,7 +614,6 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
     <p>Click any channel to stream it directly here on RootFlik.</p>
   </div>
 
-  <!-- In-site live player -->
   <div id="live-player-wrap">
     <div class="live-now-bar">
       <div class="live-now-name">
@@ -687,7 +660,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
         <button class="srv" data-s="s5">⑤ AutoEmbed</button>
         <button class="srv" data-s="yt">🎞 Trailer</button>
       </div>
-      <div class="player-tip">🔒 All ads & popups blocked · If a server shows any ad overlay, switch to another server above</div>
+      <div class="player-tip">🔒 All ads & popups blocked · If buffering, switch to another server above</div>
       <div class="qual-bar">
         <span class="qual-label">Quality:</span>
         <button class="qbtn" data-q="4k" title="4K Ultra HD">4K</button>
@@ -756,9 +729,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 
 <script>
 'use strict';
-// ── CONSTANTS ──
 
-// ── MULTI-LANGUAGE STRINGS ──
 const LANGS = {
   en:{
     home:'🏠 Home',movies:'🎬 Movies',series:'📺 Series',indian:'🇮🇳 Indian',livetv:'📡 Live TV',wl:'🔖 Watchlist',
@@ -881,21 +852,16 @@ function changeLang(code){
 }
 
 function applyLang(){
-  // Update nav tabs
-  const tabMap={home:'home',movies:'movies',series:'series',indian:'indian',livetv:'livetv',wl:'wl'};
   document.querySelectorAll('.tab').forEach(t=>{
     const pg=t.dataset.pg;
     if(L[pg]) t.textContent=L[pg];
   });
-  // Update search placeholder
   const si=document.getElementById('srch-in');
   if(si) si.placeholder=L.search;
-  // Update hero buttons
   const hp=document.getElementById('hero-play');
   const hi=document.getElementById('hero-info');
   if(hp) hp.innerHTML='▶ '+L.watchNow.replace('▶ ','');
   if(hi) hi.innerHTML=L.moreInfo;
-  // Update section titles
   const secMap={
     'r-new-ott':L.newOTT,'r-new-tv':L.newSeries,'r-trend':L.trending,
     'r-pmov':L.popularMovies,'r-ptv':L.popularSeries,'r-topx':L.topRated,
@@ -905,15 +871,12 @@ function applyLang(){
     const row=el.closest('.section')?.querySelector('.row');
     if(row&&secMap[row.id]) el.firstChild.textContent=secMap[row.id];
   });
-  // Live TV description
   const lpg=document.querySelector('#pg-livetv .pg-head p');
   if(lpg) lpg.textContent=L.liveDesc;
-  // Quality bar label
   document.querySelectorAll('.qual-label').forEach(e=>e.textContent=L.quality+':');
   document.querySelectorAll('.srv-label').forEach(e=>e.textContent=L.server+':');
 }
 
-// Apply saved language on load
 document.getElementById('lang-select').value=LANG;
 applyLang();
 
@@ -921,11 +884,9 @@ const KEY='e45a2761e3940b71bada28b8c238fd85';
 const BASE='https://api.themoviedb.org/3';
 const IMG='https://image.tmdb.org/t/p/';
 const SAFE='&include_adult=false&certification_country=IN&without_genres=10749,18';
-// Note: also filter client-side for extra safety
 const $=id=>document.getElementById(id);
 let GM={};
 
-// ── CACHE — key=url, val={data,ts} ──
 const CACHE=new Map();
 async function api(url){
   try{
@@ -940,13 +901,10 @@ async function api(url){
   }catch{return null;}
 }
 
-// ── STRICT ADULT FILTER ──
-// Blocks: adult flag, R/NC-17, explicit genres, low vote items
-const BLOCKED_GENRES=new Set([10749]); // romance-only filter removed, keeping adult content genres
+const BLOCKED_GENRES=new Set([10749]);
 function isClean(item){
   if(item.adult) return false;
   if(!item.poster_path) return false;
-  // Block items with adult certification
   const cert=(item.release_dates?.results||[]).find(r=>r.iso_3166_1==='IN'||r.iso_3166_1==='US');
   if(cert){
     const rating=(cert.release_dates||[])[0]?.certification||'';
@@ -958,7 +916,6 @@ function safe(arr,mt){
   return(arr||[]).filter(isClean).map(i=>({...i,media_type:mt||i.media_type}));
 }
 
-// ── WATCHLIST ──
 function getWL(){try{return JSON.parse(localStorage.getItem('rf_wl')||'[]');}catch{return[];}}
 function saveWL(wl){try{localStorage.setItem('rf_wl',JSON.stringify(wl));}catch{}}
 function inWL(id){return getWL().some(i=>i.id===id);}
@@ -977,16 +934,13 @@ function syncWL(id){
 }
 refreshBadge();
 
-// ── TOAST ──
 let _tt;
 function toast(msg,type=''){const t=$('toast');t.textContent=msg;t.className=type;t.classList.add('on');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('on'),2600);}
 
-// ── UTILS ──
 function skel(id,n=10){const el=$(id);if(el)el.innerHTML=Array(n).fill('<div class="sk sk-c"></div>').join('');}
 function sc(id,dir){const el=$(id);if(el)el.scrollBy({left:dir*680,behavior:'smooth'});}
 function noImg(t){return`https://placehold.co/140x210/18181d/444?text=${encodeURIComponent((t||'?').slice(0,10))}`;}
 
-// ── CARDS ──
 function makeCard(item,ft){
   const isTV=ft==='tv'||item.media_type==='tv'||!!item.first_air_date;
   const title=item.title||item.name||'Unknown';
@@ -996,7 +950,6 @@ function makeCard(item,ft){
   const wl=inWL(item.id);
   const d=document.createElement('div');
   d.className='card';
-  // Check if newly released (within 14 days)
   const releaseDate=item.release_date||item.first_air_date||'';
   const isNew=item._isNew||(releaseDate&&((Date.now()-new Date(releaseDate).getTime())<14*24*60*60*1000));
   const newBadge=isNew?'<div class="new-badge">🆕 NEW</div>':'';
@@ -1012,13 +965,11 @@ function makeCard(item,ft){
 function fillRow(id,items,type){
   const el=$(id);if(!el)return;el.innerHTML='';
   if(!items?.length){el.innerHTML='<div style="color:var(--sub);font-size:.79rem;padding:18px;font-weight:700">No content found.</div>';return;}
-  // Use document fragment for fast DOM insertion
   const frag=document.createDocumentFragment();
   items.forEach(i=>frag.appendChild(makeCard(i,type)));
   el.appendChild(frag);
 }
 
-// ── HERO ──
 let heroItems=[],heroIdx=0,heroTick;
 function buildDots(){
   const dc=$('hero-dots');dc.innerHTML='';
@@ -1045,7 +996,6 @@ function startTick(){clearInterval(heroTick);heroTick=setInterval(()=>{heroIdx=(
 $('hero-play').onclick=()=>{if(window._heroItem)openModal({...window._heroItem,media_type:window._heroItem.media_type||'movie'});};
 $('hero-info').onclick=()=>{if(window._heroItem)openModal({...window._heroItem,media_type:window._heroItem.media_type||'movie'});};
 
-// ── GENRE BARS ──
 const MG=[{id:28,n:'Action'},{id:35,n:'Comedy'},{id:27,n:'Horror'},{id:878,n:'Sci-Fi'},{id:53,n:'Thriller'},{id:18,n:'Drama'},{id:14,n:'Fantasy'},{id:99,n:'Documentary'},{id:10751,n:'Family'},{id:80,n:'Crime'}];
 const TG=[{id:10759,n:'Action'},{id:35,n:'Comedy'},{id:18,n:'Drama'},{id:10765,n:'Sci-Fi'},{id:9648,n:'Mystery'},{id:10762,n:'Kids'},{id:16,n:'Anime'},{id:80,n:'Crime'}];
 const IL=[{lang:'hi',n:'Hindi'},{lang:'ta',n:'Tamil'},{lang:'te',n:'Telugu'},{lang:'ml',n:'Malayalam'},{lang:'kn',n:'Kannada'},{lang:'bn',n:'Bengali'}];
@@ -1072,34 +1022,28 @@ function buildGBar(barId,genres,type,rowIds,isLang=false){
   });
 }
 
-// ── PAGE LOADERS — all parallel, faster ──
 const PL={};
 
-// ── GET TODAY'S DATE for real-time new releases ──
 function todayStr(){return new Date().toISOString().split('T')[0];}
 function sevenDaysAgo(){const d=new Date();d.setDate(d.getDate()-7);return d.toISOString().split('T')[0];}
 function thirtyDaysAgo(){const d=new Date();d.setDate(d.getDate()-30);return d.toISOString().split('T')[0];}
 
 async function loadNewOTT(){
-  // Fetch movies released in the last 7 days, sorted by release date DESC (newest first)
   const today=todayStr();
-  const ago7=sevenDaysAgo();
   const ago30=thirtyDaysAgo();
   const [newMov,newTV]=await Promise.all([
     api(`${BASE}/discover/movie?api_key=${KEY}&sort_by=release_date.desc&release_date.gte=${ago30}&release_date.lte=${today}&vote_count.gte=5&with_release_type=3|4|5|6`),
     api(`${BASE}/discover/tv?api_key=${KEY}&sort_by=first_air_date.desc&first_air_date.gte=${ago30}&first_air_date.lte=${today}&vote_count.gte=2`),
   ]);
-  // Merge and sort by date, newest first
   const movies=(newMov?.results||[]).filter(isClean).map(i=>({...i,media_type:'movie',_isNew:true}));
   const tvs=(newTV?.results||[]).filter(isClean).map(i=>({...i,media_type:'tv',_isNew:true}));
   const combined=[...movies,...tvs].sort((a,b)=>{
     const da=a.release_date||a.first_air_date||'';
     const db=b.release_date||b.first_air_date||'';
-    return db.localeCompare(da); // newest first
+    return db.localeCompare(da);
   }).slice(0,30);
   fillRow('r-new-ott',combined,null);
   fillRow('r-new-tv',tvs.slice(0,20),'tv');
-  // Update refresh timestamp
   const label=document.getElementById('refresh-label');
   if(label) label.title='Last updated: '+new Date().toLocaleTimeString();
 }
@@ -1111,7 +1055,6 @@ async function loadHome(){
   const rows=['r-new-ott','r-new-tv','r-trend','r-pmov','r-ptv','r-topx','r-act','r-com','r-fam'];
   rows.forEach(id=>skel(id));
 
-  // Fire ALL requests simultaneously including new OTT
   const [gm,gtv,trend,pop,tv,top,act,com,fam]=await Promise.all([
     api(`${BASE}/genre/movie/list?api_key=${KEY}`),
     api(`${BASE}/genre/tv/list?api_key=${KEY}`),
@@ -1130,7 +1073,6 @@ async function loadHome(){
   heroItems=safe(trend?.results,'').filter(i=>i.backdrop_path).slice(0,8);
   if(heroItems.length){showHero(heroItems[0]);buildDots();startTick();}
 
-  // Load new OTT separately (don't block main content)
   loadNewOTT();
 
   fillRow('r-trend',safe(trend?.results,''),null);
@@ -1141,16 +1083,14 @@ async function loadHome(){
   fillRow('r-com',safe(com?.results,'movie'),'movie');
   fillRow('r-fam',safe(fam?.results,'movie'),'movie');
 
-  // Auto-refresh new OTT every 10 minutes
   if(_homeRefreshInterval) clearInterval(_homeRefreshInterval);
   _homeRefreshInterval=setInterval(()=>{
-    // Clear cache for new OTT so we always get fresh data
     const today=todayStr();const ago30=thirtyDaysAgo();
     const u1=`${BASE}/discover/movie?api_key=${KEY}&sort_by=release_date.desc&release_date.gte=${ago30}&release_date.lte=${today}&vote_count.gte=5&with_release_type=3|4|5|6`;
     const u2=`${BASE}/discover/tv?api_key=${KEY}&sort_by=first_air_date.desc&first_air_date.gte=${ago30}&first_air_date.lte=${today}&vote_count.gte=2`;
     CACHE.delete(u1+SAFE); CACHE.delete(u2+SAFE);
     loadNewOTT();
-  }, 10*60*1000); // 10 minutes
+  }, 10*60*1000);
 }
 
 async function loadMovies(force=false){
@@ -1191,14 +1131,12 @@ async function loadSeries(force=false){
   [trend,top,air,ani,act,com,cri,sci,kdr,kid].forEach((r,i)=>fillRow(ids[i],safe(r?.results,'tv'),'tv'));
 }
 
-// INDIAN — fixed, all languages load together fast
 async function loadIndian(force=false){
   if(PL.indian&&!force)return;PL.indian=true;
   const ids=['r-ibol','r-itam','r-itel','r-imal','r-ikan','r-iben','r-iws'];
   ids.forEach(id=>skel(id));
   buildGBar('ind-gbar',IL,'movie',ids,true);
 
-  // All 7 fetches in parallel — much faster
   const [bol,tam,tel,mal,kan,ben,ws]=await Promise.all([
     api(`${BASE}/discover/movie?api_key=${KEY}&with_original_language=hi&sort_by=popularity.desc&vote_count.gte=50`),
     api(`${BASE}/discover/movie?api_key=${KEY}&with_original_language=ta&sort_by=popularity.desc&vote_count.gte=20`),
@@ -1212,7 +1150,6 @@ async function loadIndian(force=false){
   fillRow('r-iws',safe(ws?.results,'tv'),'tv');
 }
 
-// ── WATCHLIST PAGE ──
 function renderWL(){
   const wl=getWL(),grid=$('wl-grid'),sub=$('wl-sub');
   grid.innerHTML='';
@@ -1227,29 +1164,21 @@ function renderWL(){
   grid.appendChild(frag);
 }
 
-// ── LIVE TV — streams inside the site ──
-// Using free embeddable live streams (JioTV, YouTube live, etc.)
-// Channels with embeddable YouTube live IDs or free stream URLs
 const CH=[
-  // Tamil
   {e:'☀️',n:'Sun TV',l:'Tamil',c:'Tamil',embed:'https://www.youtube.com/embed/live_stream?channel=UCzPTDBMYi3v6g-gYMdBjHmg&autoplay=1',ext:'https://www.suntv.in/live'},
   {e:'🎭',n:'Vijay TV',l:'Tamil',c:'Tamil',embed:'https://www.youtube.com/embed/live_stream?channel=UC_4KyDGPHEWGqAaFGU2GGVA&autoplay=1',ext:'https://www.hotstar.com/in/live/vijay-tv/12'},
   {e:'🌈',n:'DD Podhigai',l:'Tamil (Free)',c:'Tamil',embed:'https://www.youtube.com/embed/live_stream?channel=UCqlcJO1E6nHkYD-Oo1KdZaA&autoplay=1',ext:'https://ddpodhigai.gov.in'},
   {e:'🌺',n:'Polimer TV',l:'Tamil',c:'Tamil',embed:'https://www.youtube.com/embed/live_stream?channel=UCkpFGMDVB_S9YJ_MeNpGQFg&autoplay=1',ext:'https://www.polimernews.com/live'},
   {e:'📰',n:'Puthiya Thalaimurai',l:'Tamil News',c:'News',embed:'https://www.youtube.com/embed/live_stream?channel=UCIThhsw2cEzxQwGHxO5Hvlw&autoplay=1',ext:'https://www.puthiyathalaimurai.com/live'},
   {e:'📋',n:'Thanthi TV',l:'Tamil News',c:'News',embed:'https://www.youtube.com/embed/live_stream?channel=UC-d5MsBGBUVOAA7GjsWfXhQ&autoplay=1',ext:'https://www.thanthitv.com/live'},
-  // Malayalam
   {e:'🦁',n:'Asianet News',l:'Mal News',c:'News',embed:'https://www.youtube.com/embed/live_stream?channel=UCe6dEEPTLQUFMj7LRNyAiuA&autoplay=1',ext:'https://www.asianetnews.com/live-tv'},
   {e:'🌿',n:'Kairali TV',l:'Malayalam',c:'Malayalam',embed:'https://www.youtube.com/embed/live_stream?channel=UCgkb7UwAMFSPigrQFroHoJQ&autoplay=1',ext:'https://www.kairali.tv/live'},
   {e:'🦋',n:'DD Malayalam',l:'Mal (Free)',c:'Malayalam',embed:'https://www.youtube.com/embed/live_stream?channel=UCOET7BKDMJ4bvVEAQiI8pjQ&autoplay=1',ext:'https://ddmalayalam.gov.in'},
   {e:'🏝️',n:'Amrita TV',l:'Malayalam',c:'Malayalam',embed:'https://www.youtube.com/embed/live_stream?channel=UCBvbHv-bX3j8f3J4N5BH_1w&autoplay=1',ext:'https://www.amritatv.com/live'},
   {e:'🗞️',n:'Manorama News',l:'Mal News',c:'News',embed:'https://www.youtube.com/embed/live_stream?channel=UCa5xf9VCCEwGFPFtA5lCXVA&autoplay=1',ext:'https://www.manoramanews.com/live'},
-  // Telugu
   {e:'🌸',n:'ETV Telugu',l:'Telugu',c:'Telugu',embed:'https://www.youtube.com/embed/live_stream?channel=UC8GHCOQwN2H5plFAIXo8TIw&autoplay=1',ext:'https://www.etv.co.in/live'},
   {e:'🌊',n:'DD Telugu',l:'Telugu (Free)',c:'Telugu',embed:'https://www.youtube.com/embed/live_stream?channel=UCNKEEoYzGkpgbmQ1MR_5DcA&autoplay=1',ext:'https://ddtelugu.gov.in'},
-  // Kannada
   {e:'📺',n:'DD Chandana',l:'Kannada (Free)',c:'Kannada',embed:'https://www.youtube.com/embed/live_stream?channel=UCJuADnJJvxPMJWPTmDqxWcg&autoplay=1',ext:'https://ddchandana.gov.in'},
-  // Hindi
   {e:'📺',n:'DD National',l:'Hindi (Free)',c:'Hindi',embed:'https://www.youtube.com/embed/live_stream?channel=UCF-GpFNNfcEjVbP1P1PpOEg&autoplay=1',ext:'https://ddnational.gov.in'},
   {e:'📺',n:'DD News',l:'Hindi News',c:'News',embed:'https://www.youtube.com/embed/live_stream?channel=UCF-GpFNNfcEjVbP1P1PpOEg&autoplay=1',ext:'https://ddnews.gov.in'},
   {e:'🔵',n:'Aaj Tak',l:'Hindi News',c:'News',embed:'https://www.youtube.com/embed/live_stream?channel=UCt4t-jeY85JegMlZ-E5UWtA&autoplay=1',ext:'https://www.aajtak.in/live-tv'},
@@ -1257,18 +1186,12 @@ const CH=[
   {e:'🌐',n:'NDTV 24x7',l:'English News',c:'News',embed:'https://www.youtube.com/embed/live_stream?channel=UCZFMm1mMw0F81Z37aaEzTUA&autoplay=1',ext:'https://www.ndtv.com/live-tv'},
   {e:'🔷',n:'Times Now',l:'English News',c:'News',embed:'https://www.youtube.com/embed/live_stream?channel=UCpOm6x0-Z9OZSBkeBEpnVng&autoplay=1',ext:'https://www.timesnownews.com/live-tv'},
   {e:'📈',n:'CNBC TV18',l:'Business',c:'News',embed:'https://www.youtube.com/embed/live_stream?channel=UCQm2tFBDq0HjdOE0yA60a5A&autoplay=1',ext:'https://www.cnbctv18.com/live-tv'},
-  // Bengali
   {e:'🌷',n:'ABP Ananda',l:'Bengali News',c:'Bengali',embed:'https://www.youtube.com/embed/live_stream?channel=UCnGHK9gfGVpNLMKb-BQmP5A&autoplay=1',ext:'https://www.abpananda.com/live'},
-  // Sports
   {e:'🎯',n:'DD Sports',l:'Sports (Free)',c:'Sports',embed:'https://www.youtube.com/embed/live_stream?channel=UCCCBJDYd_FqrLTGKAV58iRw&autoplay=1',ext:'https://ddsports.gov.in'},
-  // Kids
   {e:'🎨',n:'Voot Kids',l:'Kids',c:'Kids',embed:'https://www.youtube.com/embed/live_stream?channel=UCS5tt4RqIGWQ18l7RKQF-UA&autoplay=1',ext:'https://www.voot.com/kids'},
   {e:'🧸',n:'Pogo (YT)',l:'Kids',c:'Kids',embed:'https://www.youtube.com/embed/live_stream?channel=UCL5R3LKJe0b8nWBD0Bg7uQg&autoplay=1',ext:'https://www.hotstar.com/in/live/pogo/54'},
-  // Punjabi
   {e:'🌾',n:'PTC Punjabi',l:'Punjabi',c:'Punjabi',embed:'https://www.youtube.com/embed/live_stream?channel=UCmkTIjsRRFJ6W2Rt3e5BTVQ&autoplay=1',ext:'https://www.ptcpunjabi.co.in/live'},
-  // Odia
   {e:'🌊',n:'OTV Odisha',l:'Odia',c:'Odia',embed:'https://www.youtube.com/embed/live_stream?channel=UCqjXTFRWXpIzw9vFvF7JIBQ&autoplay=1',ext:'https://www.odishatv.in/live'},
-  // English
   {e:'🌍',n:'Nat Geo (YT)',l:'Docs',c:'English',embed:'https://www.youtube.com/embed/live_stream?channel=UC9-y-6csu5WGm29I7JiwpnA&autoplay=1',ext:'https://www.youtube.com/natgeo'},
 ];
 
@@ -1314,8 +1237,22 @@ function closeLivePlayer(){
   $('live-player-wrap').classList.remove('show');
 }
 
-// ── MODAL ──
+// ══════════════════════════════════════════════════════════
+// FIXED PLAYER LOGIC — no more phantom loading, no false failovers
+// ══════════════════════════════════════════════════════════
 let MS={};
+let _imdbId=null;
+let QUALITY='1080';
+
+// Server order for auto-failover (skips 'yt')
+const SERVER_ORDER=['s1','s2','s3','s4','s5'];
+let _failoverIdx=0;
+let _failoverTimer=null;        // fires only when STILL in loading state after timeout
+let _playerReady=false;         // true once iframe onload fires AND we haven't changed src since
+let _currentSrc='';             // exact src we loaded last — used to detect stale callbacks
+let _currentSrv='s1';
+let _failoverCount=0;           // how many auto-failovers happened for this title
+
 async function openModal(item){
   const isTV=item.media_type==='tv';
   const ep=isTV?'tv':'movie';
@@ -1323,7 +1260,8 @@ async function openModal(item){
 
   $('m-title').textContent=title;
   ['m-ov','m-rating','m-year','m-rt','m-genres','m-cast'].forEach(id=>$(id).textContent='');
-  $('mplayer').src='';$('sim-sec').style.display='none';
+  $('mplayer').src='';
+  $('sim-sec').style.display='none';
   $('sim-row').innerHTML='';$('plat-row').innerHTML='';
   $('ep-bar').style.display='none';
   document.querySelectorAll('.srv').forEach(b=>b.classList.remove('on'));
@@ -1332,9 +1270,14 @@ async function openModal(item){
 
   MS={item,isTV,ep,trailerKey:null,season:1,episode:1};
   $('m-wl').classList.toggle('on',inWL(item.id));
-  _imdbId=null; // reset
+  _imdbId=null;
+  // Reset per-title state
+  _failoverIdx=0;
+  _failoverCount=0;
+  _playerReady=false;
+  _currentSrc='';
+  clearTimeout(_failoverTimer);
 
-  // Fetch everything in parallel — including external_ids for IMDB ID (fixes wrong movie bug)
   const [det,vids,cred,sim,extIds]=await Promise.all([
     api(`${BASE}/${ep}/${item.id}?api_key=${KEY}`),
     api(`${BASE}/${ep}/${item.id}/videos?api_key=${KEY}`),
@@ -1343,9 +1286,8 @@ async function openModal(item){
     api(`${BASE}/${ep}/${item.id}/external_ids?api_key=${KEY}`),
   ]);
 
-  // IMDB ID — more reliable for embed servers than TMDB ID
-  _imdbId = extIds?.imdb_id || det?.imdb_id || null;
-  MS.imdbId = _imdbId;
+  _imdbId=extIds?.imdb_id||det?.imdb_id||null;
+  MS.imdbId=_imdbId;
 
   if(det){
     $('m-ov').textContent=det.overview||'No description.';
@@ -1384,8 +1326,7 @@ async function openModal(item){
     const s=safe(sim.results,ep).slice(0,12);
     if(s.length){$('sim-sec').style.display='block';const f=document.createDocumentFragment();s.forEach(x=>f.appendChild(makeCard(x,ep)));$('sim-row').appendChild(f);}
   }
-  // Reset failover state for new movie
-  _failoverIdx=0;
+
   loadStream('s1');
 }
 
@@ -1404,161 +1345,118 @@ $('ep-load').onclick=()=>{
 
 document.querySelectorAll('.srv[data-s]').forEach(btn=>{
   btn.onclick=()=>{
-    // Manual server pick — reset failover to this server's position
     const srv=btn.dataset.s;
+    // Manual pick — reset auto-failover tracking
     _failoverIdx=SERVER_ORDER.indexOf(srv);
-    if(_failoverIdx<0) _failoverIdx=0;
+    if(_failoverIdx<0)_failoverIdx=0;
+    _failoverCount=0;
     clearTimeout(_failoverTimer);
     loadStream(srv);
   };
 });
 
-// Stream URLs — uses TMDB ID (primary) verified against external_ids for accuracy
-let QUALITY='1080'; // default quality
-
-// Store imdb_id for the current item for better embed accuracy
-let _imdbId = null;
-
-async function fetchImdbId(id, ep){
-  try{
-    const d = await api(`${BASE}/${ep}/${id}/external_ids?api_key=${KEY}`);
-    return d?.imdb_id || null;
-  }catch{ return null; }
-}
-
-// Server order for auto-failover (skips 'yt')
-const SERVER_ORDER = ['s1','s2','s3','s4','s5'];
-let _failoverIdx = 0;
-let _failoverTimer = null;
-let _currentSrv = 's1';
-
 function getStreamSrc(srv){
   const{item,isTV,trailerKey,season,episode}=MS;
-  if(!item) return '';
-  const tmdbId = item.id;
-  const imdbId = _imdbId || MS.imdbId;
-  const movieId = (!isTV && imdbId) ? imdbId : tmdbId;
+  if(!item)return'';
+  const tmdbId=item.id;
+  const imdbId=_imdbId||MS.imdbId;
+  const movieId=(!isTV&&imdbId)?imdbId:tmdbId;
 
   switch(srv){
     case'yt':
       return trailerKey
         ?`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0&modestbranding=1&vq=${QUALITY==='4k'?'hd2160':QUALITY==='1080'?'hd1080':QUALITY==='720'?'hd720':'large'}`
         :'';
-
     case's1':
-      // VidSrc CC — most reliable, uses IMDB ID for movies (proven working)
       return isTV
         ?`https://vidsrc.cc/v2/embed/tv/${tmdbId}/${season}/${episode}?autoPlay=1`
         :`https://vidsrc.cc/v2/embed/movie/${movieId}?autoPlay=1`;
-
     case's2':
-      // VidLink — clean HD player, good Indian + global coverage (proven working)
       return isTV
         ?`https://vidlink.pro/tv/${tmdbId}/${season}/${episode}?primaryColor=e50914&autoplay=true`
         :`https://vidlink.pro/movie/${tmdbId}?primaryColor=e50914&autoplay=true`;
-
     case's3':
-      // 2Embed — clean, no overlays, wide Indian coverage (proven working)
       return isTV
         ?`https://www.2embed.cc/embedtvfull/${tmdbId}&s=${season}&e=${episode}`
         :`https://www.2embed.cc/embed/${movieId}`;
-
     case's4':
-      // Embed.su — TMDB-based, clean ad-free player (proven working)
       return isTV
         ?`https://embed.su/embed/tv/${tmdbId}/${season}/${episode}`
         :`https://embed.su/embed/movie/${tmdbId}`;
-
     case's5':
-      // AutoEmbed — good fallback for Bollywood/Tamil/Telugu (proven working)
       return isTV
         ?`https://autoembed.co/tv/tmdb/${tmdbId}-${season}-${episode}`
         :`https://autoembed.co/movie/tmdb/${movieId}`;
-      }
-  return '';
+  }
+  return'';
 }
 
 function showPlayerLoading(text){
   const pl=$('player-loading');
   const pu=$('player-unavail');
-  if(pl){pl.classList.remove('hide');if(text)$('pl-text').textContent=text;}
-  if(pu) pu.classList.remove('show');
+  if(pl){pl.classList.remove('hide');if(text&&$('pl-text'))$('pl-text').textContent=text;}
+  if(pu)pu.classList.remove('show');
 }
 
 function showPlayerReady(){
+  // Only hide the spinner — never interrupt the actual video
   const pl=$('player-loading');
-  if(pl) pl.classList.add('hide');
+  if(pl)pl.classList.add('hide');
   const pu=$('player-unavail');
-  if(pu) pu.classList.remove('show');
+  if(pu)pu.classList.remove('show');
+  _playerReady=true;
+  clearTimeout(_failoverTimer); // stream is playing, cancel any pending failover
 }
 
 function showPlayerUnavail(allFailed){
-  showPlayerLoading(null);
-  $('player-loading').classList.add('hide');
+  clearTimeout(_failoverTimer);
+  const pl=$('player-loading');
+  if(pl)pl.classList.add('hide');
   const pu=$('player-unavail');
-  if(!pu) return;
+  if(!pu)return;
   $('unavail-sub').textContent=allFailed
     ?'This title is not available on any server right now. Try the trailer or check back later.'
     :'This title is not on this server. Trying next server…';
   const ytBtn=$('unavail-yt-btn');
-  if(ytBtn) ytBtn.style.display=MS.trailerKey?'block':'none';
+  if(ytBtn)ytBtn.style.display=MS.trailerKey?'block':'none';
   pu.classList.add('show');
 }
 
 function tryNextServer(){
-  // Find next server in order
   const order=SERVER_ORDER;
-  _failoverIdx=(_failoverIdx+1)%order.length;
-  const next=order[_failoverIdx];
-  if(next===_currentSrv&&order.length>1){
-    // Went full circle — all failed
+  _failoverCount++;
+  // After trying all 5 servers, give up
+  if(_failoverCount>=order.length){
     showPlayerUnavail(true);
     return;
   }
+  _failoverIdx=(_failoverIdx+1)%order.length;
+  const next=order[_failoverIdx];
   loadStream(next);
 }
 
-// Set up iframe load detection
-function setupIframeDetection(){
-  const iframe=$('mplayer');
-  if(!iframe) return;
-
-  // Clear any existing timer
-  clearTimeout(_failoverTimer);
-
-  // onload fires when iframe gets a response (even error pages)
-  iframe.onload=function(){
-    // Give the player 4 seconds to actually start showing content
-    // If it stays blank, try next server
-    clearTimeout(_failoverTimer);
-    _failoverTimer=setTimeout(function(){
-      // Check if iframe has loaded real content
-      // We can't access iframe internals (cross-origin) but we can check
-      // if the src is still set (if it auto-cleared, something failed)
-      if(iframe.src && iframe.src!=='about:blank'){
-        showPlayerReady();
-      }
-    }, 2500);
-  };
-
-  iframe.onerror=function(){
-    clearTimeout(_failoverTimer);
-    // Auto try next server on hard error
-    _failoverTimer=setTimeout(()=>tryNextServer(), 1000);
-  };
-}
-
 function loadStream(srv){
-  const{trailerKey}=MS;
-  if(!MS.item) return;
+  if(!MS.item)return;
 
-  // Handle trailer specially
   if(srv==='yt'){
-    if(trailerKey){
+    if(MS.trailerKey){
       _currentSrv='yt';
+      _playerReady=false;
+      clearTimeout(_failoverTimer);
       showPlayerLoading('Loading trailer…');
-      $('mplayer').src=getStreamSrc('yt');
-      setupIframeDetection();
+      const src=getStreamSrc('yt');
+      _currentSrc=src;
+      $('mplayer').src='';
+      requestAnimationFrame(()=>{
+        $('mplayer').src=src;
+        // Trailer: hide spinner after iframe loads — no failover needed
+        $('mplayer').onload=function(){
+          if($('mplayer').src===_currentSrc) showPlayerReady();
+        };
+        $('mplayer').onerror=function(){
+          if($('mplayer').src===_currentSrc) showPlayerUnavail(false);
+        };
+      });
     }else{
       toast(L.noTrailer||'No trailer found','warn');
     }
@@ -1566,45 +1464,78 @@ function loadStream(srv){
   }
 
   _currentSrv=srv;
+  _playerReady=false;
+  clearTimeout(_failoverTimer);
+
   const src=getStreamSrc(srv);
-  if(!src){ tryNextServer(); return; }
+  if(!src){tryNextServer();return;}
 
   // Update server button highlight
   document.querySelectorAll('.srv').forEach(b=>b.classList.remove('on'));
   const activeBtn=document.querySelector(`.srv[data-s="${srv}"]`);
-  if(activeBtn) activeBtn.classList.add('on');
+  if(activeBtn)activeBtn.classList.add('on');
 
-  // Show loading spinner
-  const srvNames={'vs1':'VidSrc','vs2':'Embed','vl':'VidLink'};
-  showPlayerLoading(`Loading on ${srvNames[srv]||srv}…`);
-
-  // Hide unavail overlay
+  showPlayerLoading(`Connecting to server…`);
   $('player-unavail').classList.remove('show');
 
+  _currentSrc=src;
   $('mplayer').src='';
-  // Small delay to ensure browser clears previous src
+
   requestAnimationFrame(()=>{
     $('mplayer').src=src;
-    setupIframeDetection();
-    // Set failover timer — if still loading after 12s, try next server
-    clearTimeout(_failoverTimer);
+
+    /*
+     * KEY FIX — what was happening:
+     * 1. iframe.onload fires almost immediately (when the embed page's HTML arrives),
+     *    even before any video has buffered or started playing.
+     * 2. Old code called showPlayerReady() inside onload after a 2.5s setTimeout,
+     *    which dismissed the spinner but the video was still buffering — confusing users.
+     * 3. Then a second 12s timer ALSO fired and tried to switch servers, interrupting
+     *    a stream that was just slowly buffering on a slow connection (like 4G in India).
+     *
+     * NEW BEHAVIOUR:
+     * • onload → hides the spinner immediately (page is there, video is loading/buffering)
+     * • No auto-failover timer fires once onload has happened.
+     *   The user sees the player controls and the video buffers naturally.
+     * • Only if the iframe NEVER fires onload within 20s (dead server / network error)
+     *   do we auto-switch servers. 20s is generous enough for slow Indian connections.
+     * • onerror → immediate switch to next server.
+     * • If the server tab was switched manually, old callbacks are ignored via _currentSrc check.
+     */
+
+    const capturedSrc=src; // closure capture
+
+    $('mplayer').onload=function(){
+      // Ignore stale callbacks from previous server loads
+      if($('mplayer').src!==capturedSrc)return;
+      // Page loaded — dismiss spinner, let the video buffer on its own
+      showPlayerReady();
+      // No failover timer needed — stream is in the hands of the embed player now
+    };
+
+    $('mplayer').onerror=function(){
+      if($('mplayer').src!==capturedSrc)return;
+      // Hard network error — try next server after a short pause
+      clearTimeout(_failoverTimer);
+      _failoverTimer=setTimeout(()=>{
+        if($('mplayer').src===capturedSrc)tryNextServer();
+      },1500);
+    };
+
+    // Dead-server guard: if onload never fires after 20s, the server is unreachable
+    // This is MUCH more generous than the old 12s and only kicks in for truly dead servers
     _failoverTimer=setTimeout(function(){
-      if($('player-loading')&&!$('player-loading').classList.contains('hide')){
-        // Still showing loading = stream didn't start
-        const nextIdx=(SERVER_ORDER.indexOf(srv)+1)%SERVER_ORDER.length;
-        const nextSrv=SERVER_ORDER[nextIdx];
-        if(nextSrv && nextSrv!==srv){
-          toast('Trying next server…','');
-          loadStream(nextSrv);
-        }else{
-          showPlayerUnavail(true);
-        }
+      if($('mplayer').src===capturedSrc && !_playerReady){
+        // Still showing spinner after 20s — server is dead, try next
+        tryNextServer();
       }
-    }, 12000);
+    },20000);
   });
 
-  // Re-add corner shields
-  setTimeout(function(){ if(window.addIframeShield) window.addIframeShield(); }, 1000);
+  // Re-add corner ad shields
+  setTimeout(function(){
+    if(window._addIframeShield)window._addIframeShield();
+  },1500);
 }
 
 // Quality button handlers
@@ -1613,7 +1544,6 @@ document.querySelectorAll('.qbtn').forEach(btn=>{
     QUALITY=btn.dataset.q;
     document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('on'));
     btn.classList.add('on');
-    // Reload with new quality
     const activeSrv=document.querySelector('.srv.on')?.dataset.s||'s1';
     loadStream(activeSrv);
     toast('Quality: '+btn.textContent,'ok');
@@ -1623,19 +1553,24 @@ document.querySelectorAll('.qbtn').forEach(btn=>{
 $('m-wl').onclick=()=>{if(!MS.item)return;toggleWL({...MS.item});$('m-wl').classList.toggle('on',inWL(MS.item.id));};
 $('m-close').onclick=closeModal;
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal();});
+
 function closeModal(){
   clearTimeout(_failoverTimer);
+  _playerReady=false;
+  _currentSrc='';
   $('modal').classList.remove('on');
   document.body.style.overflow='';
-  // Reset player state
+  // Reset player overlay states
   const pl=$('player-loading');
   const pu=$('player-unavail');
-  if(pl) pl.classList.remove('hide');
-  if(pu) pu.classList.remove('show');
-  setTimeout(()=>{$('mplayer').src=''; $('mplayer').onload=null; $('mplayer').onerror=null;},280);
+  if(pl)pl.classList.remove('hide');
+  if(pu)pu.classList.remove('show');
+  setTimeout(()=>{
+    const mp=$('mplayer');
+    if(mp){mp.src='';mp.onload=null;mp.onerror=null;}
+  },280);
 }
 
-// ── NAVIGATION ──
 function goTo(pg){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.pg===pg));
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
@@ -1652,7 +1587,6 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>goTo(t.dataset.pg));
 $('logo-btn').onclick=()=>goTo('home');
 $('wl-nav-btn').onclick=()=>goTo('wl');
 
-// ── SEARCH ──
 let _st;
 const si=$('srch-in'),sr=$('srch-res');
 si.addEventListener('input',()=>{
@@ -1684,14 +1618,11 @@ async function doSearch(q){
   sr.appendChild(frag);sr.classList.add('open');
 }
 
-// ── KEYBOARD ──
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){if($('modal').classList.contains('on'))closeModal();sr.classList.remove('open');}
   if(e.key==='/'&&!$('modal').classList.contains('on')&&document.activeElement!==si){e.preventDefault();si.focus();}
 });
 
-// ── INIT ──
-// Apply language immediately
 document.getElementById('lang-select').value=LANG;
 applyLang();
 loadHome();
