@@ -664,10 +664,10 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       <div class="qual-bar">
         <span class="qual-label">Quality:</span>
         <button class="qbtn" data-q="4k" title="4K Ultra HD">4K</button>
-        <button class="qbtn on" data-q="1080" title="Full HD">1080p</button>
+        <button class="qbtn" data-q="1080" title="Full HD">1080p</button>
         <button class="qbtn" data-q="720" title="HD">720p</button>
         <button class="qbtn" data-q="480" title="SD">480p</button>
-        <button class="qbtn" data-q="auto" title="Auto">Auto</button>
+        <button class="qbtn on" data-q="auto" title="Auto">Auto</button>
       </div>
       <div class="ep-bar" id="ep-bar" style="display:none">
         <select id="s-sel"></select>
@@ -1242,7 +1242,7 @@ function closeLivePlayer(){
 // ══════════════════════════════════════════════════════════
 let MS={};
 let _imdbId=null;
-let QUALITY='1080';
+let QUALITY='auto';
 
 // Server order for auto-failover (skips 'yt')
 const SERVER_ORDER=['s1','s2','s3','s4','s5'];
