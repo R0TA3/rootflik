@@ -294,8 +294,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   .card .card-wl{opacity:1}
   .card:active{transform:scale(.96);transition:transform .1s}
   .card-wl{width:30px;height:30px;font-size:.75rem}
-  .row{scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:12px;}
-  .card{scroll-snap-align:start}
+  .row{-webkit-overflow-scrolling:touch;padding-bottom:12px;}
   #hero{height:68vh;min-height:360px}
   #hero-title{font-size:1.75rem;line-height:1}
   #hero-ov{font-size:.75rem;-webkit-line-clamp:2}
@@ -305,7 +304,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   .hero-btns{gap:8px}
   #modal{align-items:flex-end;padding:0}
   .mbox{border-radius:20px 20px 0 0;max-height:93vh;}
-  .mbox::before{content:\'\';display:block;width:40px;height:4px;border-radius:2px;background:var(--border2);margin:10px auto 0;}
+  .mbox::before{content:'';display:block;width:40px;height:4px;border-radius:2px;background:var(--border2);margin:10px auto 0;}
   .srv-bar{flex-wrap:nowrap;overflow-x:auto;padding:8px 12px;gap:5px;scrollbar-width:none;}
   .srv-bar::-webkit-scrollbar{display:none}
   .srv{padding:6px 12px;font-size:.7rem;border-radius:7px}
