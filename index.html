@@ -426,7 +426,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   position:absolute;inset:0;z-index:60;
   background:#000;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
-  transition:opacity .3s;
+  transition:opacity .4s;
 }
 #player-loading.hide{opacity:0;pointer-events:none;}
 .spin{
@@ -1352,20 +1352,27 @@ function closeLivePlayer(){
 }
 
 // ══════════════════════════════════════════════════════════
-// FIXED PLAYER LOGIC — no more phantom loading, no false failovers
+// PLAYER LOGIC — buffering fix
+// Root cause: iframe.onload fires when the embed page's HTML
+// arrives, NOT when the video starts playing. The old code
+// hid the spinner immediately on onload, making it look like
+// the player was ready while the video was still buffering.
+// Fix: after onload, keep showing a "Buffering…" message for
+// a short warm-up window so users know it's working, then
+// fade the spinner out. The video continues to buffer normally
+// inside the iframe — we never interrupt it.
 // ══════════════════════════════════════════════════════════
 let MS={};
 let _imdbId=null;
 let QUALITY='auto';
 
-// Server order for auto-failover (skips 'yt')
 const SERVER_ORDER=['s1','s2','s3','s4','s5'];
 let _failoverIdx=0;
-let _failoverTimer=null;        // fires only when STILL in loading state after timeout
-let _playerReady=false;         // true once iframe onload fires AND we haven't changed src since
-let _currentSrc='';             // exact src we loaded last — used to detect stale callbacks
+let _failoverTimer=null;
+let _playerReady=false;
+let _currentSrc='';
 let _currentSrv='s1';
-let _failoverCount=0;           // how many auto-failovers happened for this title
+let _failoverCount=0;
 
 async function openModal(item){
   const isTV=item.media_type==='tv';
@@ -1385,7 +1392,6 @@ async function openModal(item){
   MS={item,isTV,ep,trailerKey:null,season:1,episode:1};
   $('m-wl').classList.toggle('on',inWL(item.id));
   _imdbId=null;
-  // Reset per-title state
   _failoverIdx=0;
   _failoverCount=0;
   _playerReady=false;
@@ -1460,7 +1466,6 @@ $('ep-load').onclick=()=>{
 document.querySelectorAll('.srv[data-s]').forEach(btn=>{
   btn.onclick=()=>{
     const srv=btn.dataset.s;
-    // Manual pick — reset auto-failover tracking
     _failoverIdx=SERVER_ORDER.indexOf(srv);
     if(_failoverIdx<0)_failoverIdx=0;
     _failoverCount=0;
@@ -1508,18 +1513,32 @@ function getStreamSrc(srv){
 function showPlayerLoading(text){
   const pl=$('player-loading');
   const pu=$('player-unavail');
-  if(pl){pl.classList.remove('hide');if(text&&$('pl-text'))$('pl-text').textContent=text;}
+  if(pl){
+    pl.classList.remove('hide');
+    if(text&&$('pl-text'))$('pl-text').textContent=text;
+  }
   if(pu)pu.classList.remove('show');
 }
 
 function showPlayerReady(){
-  // Only hide the spinner — never interrupt the actual video
-  const pl=$('player-loading');
-  if(pl)pl.classList.add('hide');
-  const pu=$('player-unavail');
-  if(pu)pu.classList.remove('show');
+  // ── THE ACTUAL FIX ──
+  // onload fires when the embed page HTML arrives — the video hasn't started yet.
+  // Instead of instantly hiding the spinner (which makes it look broken when the
+  // video is still buffering), we:
+  //   1. Update the text to "Buffering… please wait" so the user knows it's working.
+  //   2. Wait 3.5s (enough for the embed player UI to mount and start buffering).
+  //   3. Then fade the spinner out smoothly.
+  // The video buffers at its own pace — we never interrupt it.
+  const plText=$('pl-text');
+  if(plText) plText.textContent='Buffering… please wait';
   _playerReady=true;
-  clearTimeout(_failoverTimer); // stream is playing, cancel any pending failover
+  clearTimeout(_failoverTimer); // stream page loaded — cancel the dead-server guard
+
+  // Fade out after a short warm-up delay
+  setTimeout(function(){
+    const pl=$('player-loading');
+    if(pl&&_playerReady) pl.classList.add('hide');
+  }, 3500);
 }
 
 function showPlayerUnavail(allFailed){
@@ -1539,7 +1558,6 @@ function showPlayerUnavail(allFailed){
 function tryNextServer(){
   const order=SERVER_ORDER;
   _failoverCount++;
-  // After trying all 5 servers, give up
   if(_failoverCount>=order.length){
     showPlayerUnavail(true);
     return;
@@ -1563,7 +1581,6 @@ function loadStream(srv){
       $('mplayer').src='';
       requestAnimationFrame(()=>{
         $('mplayer').src=src;
-        // Trailer: hide spinner after iframe loads — no failover needed
         $('mplayer').onload=function(){
           if($('mplayer').src===_currentSrc) showPlayerReady();
         };
@@ -1589,7 +1606,7 @@ function loadStream(srv){
   const activeBtn=document.querySelector(`.srv[data-s="${srv}"]`);
   if(activeBtn)activeBtn.classList.add('on');
 
-  showPlayerLoading(`Connecting to server…`);
+  showPlayerLoading('Connecting to server…');
   $('player-unavail').classList.remove('show');
 
   _currentSrc=src;
@@ -1598,55 +1615,34 @@ function loadStream(srv){
   requestAnimationFrame(()=>{
     $('mplayer').src=src;
 
-    /*
-     * KEY FIX — what was happening:
-     * 1. iframe.onload fires almost immediately (when the embed page's HTML arrives),
-     *    even before any video has buffered or started playing.
-     * 2. Old code called showPlayerReady() inside onload after a 2.5s setTimeout,
-     *    which dismissed the spinner but the video was still buffering — confusing users.
-     * 3. Then a second 12s timer ALSO fired and tried to switch servers, interrupting
-     *    a stream that was just slowly buffering on a slow connection (like 4G in India).
-     *
-     * NEW BEHAVIOUR:
-     * • onload → hides the spinner immediately (page is there, video is loading/buffering)
-     * • No auto-failover timer fires once onload has happened.
-     *   The user sees the player controls and the video buffers naturally.
-     * • Only if the iframe NEVER fires onload within 20s (dead server / network error)
-     *   do we auto-switch servers. 20s is generous enough for slow Indian connections.
-     * • onerror → immediate switch to next server.
-     * • If the server tab was switched manually, old callbacks are ignored via _currentSrc check.
-     */
-
-    const capturedSrc=src; // closure capture
+    const capturedSrc=src;
 
     $('mplayer').onload=function(){
-      // Ignore stale callbacks from previous server loads
+      // Stale callback guard — ignore if server was switched
       if($('mplayer').src!==capturedSrc)return;
-      // Page loaded — dismiss spinner, let the video buffer on its own
+      // Page arrived — show buffering message, then fade spinner after warm-up
       showPlayerReady();
-      // No failover timer needed — stream is in the hands of the embed player now
     };
 
     $('mplayer').onerror=function(){
       if($('mplayer').src!==capturedSrc)return;
-      // Hard network error — try next server after a short pause
+      // Hard network error — try next server
       clearTimeout(_failoverTimer);
       _failoverTimer=setTimeout(()=>{
-        if($('mplayer').src===capturedSrc)tryNextServer();
+        if($('mplayer').src===capturedSrc&&!_playerReady)tryNextServer();
       },1500);
     };
 
-    // Dead-server guard: if onload never fires after 20s, the server is unreachable
-    // This is MUCH more generous than the old 12s and only kicks in for truly dead servers
+    // Dead-server guard: if onload NEVER fires within 25s, server is truly unreachable.
+    // 25s is generous for slow 4G/Jio/BSNL connections. This only triggers if the
+    // spinner is still showing (onload hasn't fired at all).
     _failoverTimer=setTimeout(function(){
-      if($('mplayer').src===capturedSrc && !_playerReady){
-        // Still showing spinner after 20s — server is dead, try next
+      if($('mplayer').src===capturedSrc&&!_playerReady){
         tryNextServer();
       }
-    },20000);
+    },25000);
   });
 
-  // Re-add corner ad shields
   setTimeout(function(){
     if(window._addIframeShield)window._addIframeShield();
   },1500);
@@ -1674,11 +1670,11 @@ function closeModal(){
   _currentSrc='';
   $('modal').classList.remove('on');
   document.body.style.overflow='';
-  // Reset player overlay states
   const pl=$('player-loading');
   const pu=$('player-unavail');
   if(pl)pl.classList.remove('hide');
   if(pu)pu.classList.remove('show');
+  if($('pl-text'))$('pl-text').textContent='Loading stream…';
   setTimeout(()=>{
     const mp=$('mplayer');
     if(mp){mp.src='';mp.onload=null;mp.onerror=null;}
@@ -1746,9 +1742,6 @@ function setBNav(el){
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
   if(el) el.classList.add('on');
 }
-// Keep bottom nav in sync when top tabs or logo used
-const _origGoTo = goTo;
-// Patch goTo to also update bottom nav
 (function(){
   const tabs = document.querySelectorAll('#bottom-nav .bnav-btn');
   const origGoTo = window.goTo;
