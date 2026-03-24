@@ -424,54 +424,19 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 #player-wrap{position:relative;background:#000;overflow:hidden;}
 #player-loading{
   position:absolute;inset:0;z-index:60;
-  background:linear-gradient(135deg,#0a0a0c 0%,#111115 100%);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
-  transition:opacity .4s ease;
+  background:#000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  transition:opacity .3s;
 }
 #player-loading.hide{opacity:0;pointer-events:none;}
-/* Progress bar container */
-.pl-bar-wrap{
-  width:min(280px,70vw);
-  background:rgba(255,255,255,.08);
-  border-radius:20px;height:6px;overflow:hidden;
-  position:relative;
+.spin{
+  width:40px;height:40px;border-radius:50%;
+  border:3px solid rgba(229,9,20,.2);
+  border-top-color:var(--red);
+  animation:spin .8s linear infinite;
 }
-.pl-bar{
-  height:100%;border-radius:20px;
-  background:linear-gradient(90deg,var(--red),#ff6b35);
-  width:0%;
-  transition:width .35s ease;
-  box-shadow:0 0 12px rgba(229,9,20,.5);
-}
-/* Shimmer animation on bar */
-.pl-bar::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.3) 50%,transparent 100%);
-  animation:pl-shimmer 1.2s infinite;
-  border-radius:20px;
-}
-@keyframes pl-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
-.pl-pct{
-  font-family:'Bebas Neue',sans-serif;font-size:2.2rem;
-  color:#fff;letter-spacing:2px;line-height:1;
-  text-shadow:0 0 20px rgba(229,9,20,.4);
-}
-.pl-text{font-size:.72rem;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.8px;margin-top:2px;}
-.pl-srv{font-size:.6rem;font-weight:800;color:rgba(229,9,20,.7);letter-spacing:1px;text-transform:uppercase;}
-/* Spinning ring around percentage */
-.pl-ring{
-  position:relative;width:80px;height:80px;
-  display:flex;align-items:center;justify-content:center;
-}
-.pl-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
-.pl-ring-track{fill:none;stroke:rgba(255,255,255,.06);stroke-width:4}
-.pl-ring-fill{fill:none;stroke:var(--red);stroke-width:4;stroke-linecap:round;
-  stroke-dasharray:220;stroke-dashoffset:220;
-  transition:stroke-dashoffset .35s ease;
-  filter:drop-shadow(0 0 6px rgba(229,9,20,.6));
-}
-.spin{display:none}/* hide old spinner - replaced by ring */
 @keyframes spin{to{transform:rotate(360deg)}}
+.pl-text{font-size:.75rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.5px;}
 
 #player-unavail{
   position:absolute;inset:0;z-index:61;
@@ -762,9 +727,10 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       <button class="live-close-btn" onclick="closeLivePlayer()" title="Close">✕</button>
     </div>
     <iframe id="live-iframe"
-      allowfullscreen
-      allow="autoplay;fullscreen;picture-in-picture;encrypted-media"
-      referrerpolicy="origin">
+      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+      allow="autoplay;fullscreen"
+      referrerpolicy="no-referrer"
+      allowfullscreen>
     </iframe>
     <div class="live-ext-link">
       📺 Stream not loading inside site?
@@ -813,15 +779,10 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
         <button class="ep-load" id="ep-load">▶ Load</button>
       </div>
       <div id="player-wrap" style="position:relative;background:#000;overflow:hidden;">
-        <!-- Loading progress bar -->
+        <!-- Loading spinner -->
         <div id="player-loading">
-          <div class="pl-ring">
-            <svg viewBox="0 0 80 80"><circle class="pl-ring-track" cx="40" cy="40" r="35"/><circle class="pl-ring-fill" id="pl-ring-fill" cx="40" cy="40" r="35"/></svg>
-            <span class="pl-pct" id="pl-pct">0%</span>
-          </div>
-          <div class="pl-bar-wrap"><div class="pl-bar" id="pl-bar"></div></div>
-          <div class="pl-text" id="pl-text">Connecting…</div>
-          <div class="pl-srv" id="pl-srv"></div>
+          <div class="spin"></div>
+          <div class="pl-text" id="pl-text">Loading stream…</div>
         </div>
         <!-- Not available overlay -->
         <div id="player-unavail">
@@ -834,9 +795,10 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
           </div>
         </div>
         <iframe id="mplayer"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
           allowfullscreen
-          allow="autoplay;fullscreen;picture-in-picture;encrypted-media;accelerometer;gyroscope"
-          referrerpolicy="origin"
+          allow="autoplay;fullscreen;picture-in-picture;encrypted-media"
+          referrerpolicy="no-referrer"
           style="width:100%;aspect-ratio:16/9;display:block;border:none;">
         </iframe>
       </div>
@@ -1543,80 +1505,41 @@ function getStreamSrc(srv){
   return'';
 }
 
-// ── Progress bar helpers ──
-let _progTimer=null;
-let _progVal=0;
-
-function setProgress(pct,text,srv){
-  _progVal=pct;
-  const bar=$('pl-bar');
-  const pctEl=$('pl-pct');
-  const ring=$('pl-ring-fill');
-  const txtEl=$('pl-text');
-  const srvEl=$('pl-srv');
-  if(bar) bar.style.width=pct+'%';
-  if(pctEl) pctEl.textContent=Math.round(pct)+'%';
-  // SVG ring: circumference=2*pi*35≈220
-  if(ring) ring.style.strokeDashoffset=(220-(220*pct/100)).toFixed(1);
-  if(text&&txtEl) txtEl.textContent=text;
-  if(srvEl) srvEl.textContent=srv||'';
-}
-
-function animateProgress(from,to,durationMs,text,srv){
-  clearInterval(_progTimer);
-  const steps=40;
-  const interval=durationMs/steps;
-  let cur=from;
-  const inc=(to-from)/steps;
-  setProgress(cur,text,srv);
-  _progTimer=setInterval(()=>{
-    cur+=inc;
-    if(cur>=to){cur=to;clearInterval(_progTimer);}
-    setProgress(cur,text,srv);
-  },interval);
-}
-
-function showPlayerLoading(text,srv){
-  clearInterval(_progTimer);
+function showPlayerLoading(text){
   const pl=$('player-loading');
   const pu=$('player-unavail');
-  if(pl) pl.classList.remove('hide');
-  if(pu) pu.classList.remove('show');
-  setProgress(0,text||'Connecting…',srv||'');
+  if(pl){pl.classList.remove('hide');if(text&&$('pl-text'))$('pl-text').textContent=text;}
+  if(pu)pu.classList.remove('show');
 }
 
 function showPlayerReady(){
-  clearInterval(_progTimer);
-  setProgress(100,'Ready!','');
-  _playerReady=true;
-  clearTimeout(_failoverTimer);
-  // Smooth fade out after showing 100%
-  setTimeout(()=>{
-    const pl=$('player-loading');
-    if(pl) pl.classList.add('hide');
-  },400);
+  // Only hide the spinner — never interrupt the actual video
+  const pl=$('player-loading');
+  if(pl)pl.classList.add('hide');
   const pu=$('player-unavail');
-  if(pu) pu.classList.remove('show');
+  if(pu)pu.classList.remove('show');
+  _playerReady=true;
+  clearTimeout(_failoverTimer); // stream is playing, cancel any pending failover
 }
 
 function showPlayerUnavail(allFailed){
-  clearInterval(_progTimer);
   clearTimeout(_failoverTimer);
   const pl=$('player-loading');
-  if(pl) pl.classList.add('hide');
+  if(pl)pl.classList.add('hide');
   const pu=$('player-unavail');
   if(!pu)return;
   $('unavail-sub').textContent=allFailed
-    ?'Not available on any server right now. Try the trailer or check back later.'
-    :'Not on this server. Trying next server…';
+    ?'This title is not available on any server right now. Try the trailer or check back later.'
+    :'This title is not on this server. Trying next server…';
   const ytBtn=$('unavail-yt-btn');
-  if(ytBtn) ytBtn.style.display=MS.trailerKey?'block':'none';
+  if(ytBtn)ytBtn.style.display=MS.trailerKey?'block':'none';
   pu.classList.add('show');
 }
 
 function tryNextServer(){
   const order=SERVER_ORDER;
   _failoverCount++;
+  // After trying all 5 servers, give up
   if(_failoverCount>=order.length){
     showPlayerUnavail(true);
     return;
@@ -1626,8 +1549,6 @@ function tryNextServer(){
   loadStream(next);
 }
 
-const SRV_NAMES={s1:'VidSrc',s2:'VidLink',s3:'2Embed',s4:'EmbedSu',s5:'AutoEmbed',yt:'Trailer'};
-
 function loadStream(srv){
   if(!MS.item)return;
 
@@ -1636,22 +1557,20 @@ function loadStream(srv){
       _currentSrv='yt';
       _playerReady=false;
       clearTimeout(_failoverTimer);
-      clearInterval(_progTimer);
-      showPlayerLoading('Loading trailer…','Trailer');
-      animateProgress(0,85,2000,'Loading trailer…','Trailer');
+      showPlayerLoading('Loading trailer…');
       const src=getStreamSrc('yt');
       _currentSrc=src;
-      const mp=$('mplayer');
-      mp.src='';
-      setTimeout(()=>{
-        mp.src=src;
-        mp.onload=function(){
-          if(mp.src===_currentSrc) showPlayerReady();
+      $('mplayer').src='';
+      requestAnimationFrame(()=>{
+        $('mplayer').src=src;
+        // Trailer: hide spinner after iframe loads — no failover needed
+        $('mplayer').onload=function(){
+          if($('mplayer').src===_currentSrc) showPlayerReady();
         };
-        mp.onerror=function(){
-          if(mp.src===_currentSrc) showPlayerUnavail(false);
+        $('mplayer').onerror=function(){
+          if($('mplayer').src===_currentSrc) showPlayerUnavail(false);
         };
-      },50);
+      });
     }else{
       toast(L.noTrailer||'No trailer found','warn');
     }
@@ -1661,76 +1580,76 @@ function loadStream(srv){
   _currentSrv=srv;
   _playerReady=false;
   clearTimeout(_failoverTimer);
-  clearInterval(_progTimer);
 
   const src=getStreamSrc(srv);
   if(!src){tryNextServer();return;}
 
-  // Highlight active server button
+  // Update server button highlight
   document.querySelectorAll('.srv').forEach(b=>b.classList.remove('on'));
   const activeBtn=document.querySelector(`.srv[data-s="${srv}"]`);
-  if(activeBtn) activeBtn.classList.add('on');
+  if(activeBtn)activeBtn.classList.add('on');
 
-  const srvLabel=SRV_NAMES[srv]||srv;
-
-  // Show loading with 0%
-  showPlayerLoading('Connecting…',srvLabel);
+  showPlayerLoading(`Connecting to server…`);
   $('player-unavail').classList.remove('show');
 
-  // Phase 1: 0→30% while we set the src (fast, ~0.6s)
-  animateProgress(0,30,600,'Connecting…',srvLabel);
-
   _currentSrc=src;
-  const mp=$('mplayer');
-  mp.src='';
+  $('mplayer').src='';
 
-  // Small delay to let browser clear previous iframe cleanly
-  setTimeout(()=>{
-    mp.src=src;
+  requestAnimationFrame(()=>{
+    $('mplayer').src=src;
 
-    const capturedSrc=src;
+    /*
+     * KEY FIX — what was happening:
+     * 1. iframe.onload fires almost immediately (when the embed page's HTML arrives),
+     *    even before any video has buffered or started playing.
+     * 2. Old code called showPlayerReady() inside onload after a 2.5s setTimeout,
+     *    which dismissed the spinner but the video was still buffering — confusing users.
+     * 3. Then a second 12s timer ALSO fired and tried to switch servers, interrupting
+     *    a stream that was just slowly buffering on a slow connection (like 4G in India).
+     *
+     * NEW BEHAVIOUR:
+     * • onload → hides the spinner immediately (page is there, video is loading/buffering)
+     * • No auto-failover timer fires once onload has happened.
+     *   The user sees the player controls and the video buffers naturally.
+     * • Only if the iframe NEVER fires onload within 20s (dead server / network error)
+     *   do we auto-switch servers. 20s is generous enough for slow Indian connections.
+     * • onerror → immediate switch to next server.
+     * • If the server tab was switched manually, old callbacks are ignored via _currentSrc check.
+     */
 
-    // Phase 2: 30→80% while iframe is loading (simulate fetch, ~3s)
-    setTimeout(()=>{
-      if(mp.src===capturedSrc && !_playerReady){
-        animateProgress(30,80,3000,'Loading stream…',srvLabel);
-      }
-    },650);
+    const capturedSrc=src; // closure capture
 
-    // Phase 3: 80→95% holding pattern — waiting for embed player to init (~5s)
-    setTimeout(()=>{
-      if(mp.src===capturedSrc && !_playerReady){
-        animateProgress(80,95,5000,'Almost ready…',srvLabel);
-      }
-    },3700);
-
-    mp.onload=function(){
-      if(mp.src!==capturedSrc)return;
-      // iframe HTML loaded → go to 100% and show player
+    $('mplayer').onload=function(){
+      // Ignore stale callbacks from previous server loads
+      if($('mplayer').src!==capturedSrc)return;
+      // Page loaded — dismiss spinner, let the video buffer on its own
       showPlayerReady();
+      // No failover timer needed — stream is in the hands of the embed player now
     };
 
-    mp.onerror=function(){
-      if(mp.src!==capturedSrc)return;
+    $('mplayer').onerror=function(){
+      if($('mplayer').src!==capturedSrc)return;
+      // Hard network error — try next server after a short pause
       clearTimeout(_failoverTimer);
       _failoverTimer=setTimeout(()=>{
-        if(mp.src===capturedSrc) tryNextServer();
-      },1200);
+        if($('mplayer').src===capturedSrc)tryNextServer();
+      },1500);
     };
 
-    // Dead-server guard: 18s with no onload = server unreachable
+    // Dead-server guard: if onload never fires after 20s, the server is unreachable
+    // This is MUCH more generous than the old 12s and only kicks in for truly dead servers
     _failoverTimer=setTimeout(function(){
-      if(mp.src===capturedSrc && !_playerReady){
+      if($('mplayer').src===capturedSrc && !_playerReady){
+        // Still showing spinner after 20s — server is dead, try next
         tryNextServer();
       }
-    },18000);
+    },20000);
+  });
 
-  },80);
-
-  // Re-add corner ad shields after load
+  // Re-add corner ad shields
   setTimeout(function(){
-    if(window._addIframeShield) window._addIframeShield();
-  },2000);
+    if(window._addIframeShield)window._addIframeShield();
+  },1500);
 }
 
 // Quality button handlers
@@ -1751,14 +1670,14 @@ $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal();})
 
 function closeModal(){
   clearTimeout(_failoverTimer);
-  clearInterval(_progTimer);
   _playerReady=false;
   _currentSrc='';
   $('modal').classList.remove('on');
   document.body.style.overflow='';
+  // Reset player overlay states
   const pl=$('player-loading');
   const pu=$('player-unavail');
-  if(pl){pl.classList.remove('hide');setProgress(0,'Connecting…','');}
+  if(pl)pl.classList.remove('hide');
   if(pu)pu.classList.remove('show');
   setTimeout(()=>{
     const mp=$('mplayer');
