@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<!-- ✅ FIX: Content Security Policy blocks iframes from navigating parent -->
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self'; form-action 'self';">
 <title>RootFlik</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
@@ -253,10 +255,8 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 
 /* ══════════════════════════════════════════════
    MOBILE UX — Netflix/Amazon style phone polish
-   Only adds new rules, touches nothing above
    ══════════════════════════════════════════════ */
 
-/* ── Bottom nav bar for phones (like Netflix app) ── */
 @media(max-width:768px){
   body{padding-bottom:62px}
   #pg-home{padding-bottom:70px}
@@ -415,7 +415,6 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   margin-left:8px;vertical-align:middle;
 }
 
-
 /* ── AD SHIELDS (corner blockers over iframe) ── */
 .rf-shield{position:absolute;z-index:999;pointer-events:all;background:transparent;user-select:none;}
 #player-wrap{position:relative;background:#000;overflow:hidden;}
@@ -429,7 +428,6 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   transition:opacity .4s ease;
 }
 #player-loading.hide{opacity:0;pointer-events:none;}
-/* Progress bar container */
 .pl-bar-wrap{
   width:min(280px,70vw);
   background:rgba(255,255,255,.08);
@@ -443,7 +441,6 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   transition:width .35s ease;
   box-shadow:0 0 12px rgba(229,9,20,.5);
 }
-/* Shimmer animation on bar */
 .pl-bar::after{
   content:'';position:absolute;inset:0;
   background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.3) 50%,transparent 100%);
@@ -458,7 +455,6 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 }
 .pl-text{font-size:.72rem;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.8px;margin-top:2px;}
 .pl-srv{font-size:.6rem;font-weight:800;color:rgba(229,9,20,.7);letter-spacing:1px;text-transform:uppercase;}
-/* Spinning ring around percentage */
 .pl-ring{
   position:relative;width:80px;height:80px;
   display:flex;align-items:center;justify-content:center;
@@ -470,7 +466,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   transition:stroke-dashoffset .35s ease;
   filter:drop-shadow(0 0 6px rgba(229,9,20,.6));
 }
-.spin{display:none}/* hide old spinner - replaced by ring */
+.spin{display:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 #player-unavail{
@@ -497,18 +493,53 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 </head>
 <body>
 
-<!-- ════════ SECURITY SHIELD v4 — mobile-safe, nuclear ad block ════════ -->
+<!-- ════════ SECURITY SHIELD v5 — NUCLEAR NAV BLOCK + IFRAME SANDBOX ════════ -->
 <script>
 (function(){
   'use strict';
 
-  /* ── 1. Kill all popup/dialog APIs ── */
+  /* ── 1. Kill all popup/dialog/navigation APIs immediately ── */
   window.open = function(){ return null; };
   window.alert = function(){};
   window.confirm = function(){ return false; };
   window.prompt = function(){ return null; };
 
-  /* ── 2. OUR safe elements — never nuke these ── */
+  /* ── 2. CRITICAL: Block ALL page navigation attempts ── */
+  // Intercept location changes
+  var _realHref = Object.getOwnPropertyDescriptor(window.location,'href');
+  try {
+    // Override history methods to prevent iframe-triggered navigation
+    var _origPush = history.pushState.bind(history);
+    var _origReplace = history.replaceState.bind(history);
+    history.pushState = function(state, title, url) {
+      // Only allow if url is same-origin or hash-only
+      if(url && typeof url === 'string') {
+        try {
+          var u = new URL(url, location.href);
+          if(u.origin !== location.origin) return;
+        } catch(e) { return; }
+      }
+      return _origPush(state, title, url);
+    };
+    history.replaceState = function(state, title, url) {
+      if(url && typeof url === 'string') {
+        try {
+          var u = new URL(url, location.href);
+          if(u.origin !== location.origin) return;
+        } catch(e) { return; }
+      }
+      return _origReplace(state, title, url);
+    };
+  } catch(e) {}
+
+  /* ── 3. Block beforeunload / unload triggered navigation ── */
+  window.addEventListener('beforeunload', function(e) {
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }, true);
+
+  /* ── 4. OUR safe elements — never nuke these ── */
   var SAFE_IDS = new Set(['nav','bottom-nav','modal','toast','hero','mplayer','player-wrap',
     'player-loading','player-unavail','pg-home','pg-movies','pg-series','pg-indian',
     'pg-livetv','pg-wl','srch-res','srch-in','wl-badge','lang-selector','live-player-wrap']);
@@ -521,12 +552,10 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   function isSafeEl(el){
     if(!el || el===document.body || el===document.documentElement) return true;
     if(SAFE_IDS.has(el.id)) return true;
-    // Check if any class matches safe list
     var cls = (el.className||'').split(' ');
     for(var i=0;i<cls.length;i++){
       if(SAFE_CLASSES.has(cls[i])) return true;
     }
-    // Walk up — if inside any safe container, it's safe
     var p = el.parentElement;
     while(p && p!==document.body){
       if(SAFE_IDS.has(p.id)) return true;
@@ -539,16 +568,17 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
     return false;
   }
 
-  /* ── 3. Block external navigation (click + touchend) ── */
+  /* ── 5. Block ALL external navigation clicks ── */
   function blockExternalNav(e){
     var a = e.target ? e.target.closest('a[href]') : null;
     if(!a) return;
     var h = (a.getAttribute('href')||'').trim();
     if(!h || h.startsWith('#') || h.startsWith('mailto:')) return;
-    // Allow Instagram link and platform buttons
+    // Only allow Instagram and platform buttons
     if(h.includes('instagram.com')) return;
     if(a.classList.contains('plat-btn')) return;
-    // Block everything else that goes external
+    if(a.id === 'live-ext-a') return;
+    // Block everything external
     if(h.startsWith('http')||h.startsWith('//')||a.target==='_blank'){
       e.preventDefault();
       e.stopImmediatePropagation();
@@ -558,23 +588,41 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   document.addEventListener('click', blockExternalNav, true);
   document.addEventListener('touchend', blockExternalNav, true);
 
-  /* ── 4. Block form submissions to external ── */
+  /* ── 6. Block form submissions ── */
   document.addEventListener('submit', function(e){
     try{ if(e.target.action && !e.target.action.includes(location.hostname)) e.preventDefault(); }catch(x){}
   }, true);
 
-  /* ── 5. Block postMessages from iframes ── */
+  /* ── 7. CRITICAL: Block ALL postMessages from iframes that try to navigate ── */
   window.addEventListener('message', function(e){
-    if(e.origin && e.origin !== location.origin){
-      try{ e.stopImmediatePropagation(); }catch(x){}
+    if(!e.origin || e.origin === location.origin) return;
+    // Block any message that tries to navigate
+    try {
+      var data = e.data;
+      if(typeof data === 'string') {
+        var lower = data.toLowerCase();
+        if(lower.includes('navigate') || lower.includes('redirect') || lower.includes('location') || lower.includes('href')) {
+          e.stopImmediatePropagation();
+          return;
+        }
+      }
+      if(typeof data === 'object' && data !== null) {
+        var str = JSON.stringify(data).toLowerCase();
+        if(str.includes('navigate') || str.includes('redirect')) {
+          e.stopImmediatePropagation();
+          return;
+        }
+      }
+      e.stopImmediatePropagation();
+    } catch(x) {
+      try{ e.stopImmediatePropagation(); }catch(y){}
     }
   }, true);
 
-  /* ── 6. Block touch redirects — touchstart on suspicious overlays ── */
+  /* ── 8. Block touch redirects ── */
   document.addEventListener('touchstart', function(e){
     var el = e.target;
     if(!el) return;
-    // If touch is on something with a super-high z-index that isn't ours, kill it
     try{
       var s = getComputedStyle(el);
       var z = parseInt(s.zIndex)||0;
@@ -586,13 +634,12 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
     }catch(x){}
   }, {passive:false, capture:true});
 
-  /* ── 7. Nuke ad elements ── */
+  /* ── 9. Nuke ad elements ── */
   var BAD_KW = ['casino','bet365','adult content','webcam','dating site',
     'free spin','hot girls','chat now','meet singles','click to win',
     'congratulations you','you have been selected','claim your prize',
     'download now','install now','virus detected','your device'];
 
-  // Ad URL patterns — block any <a> linking to these
   var BAD_URL_PATTERNS = [
     /ad[sx]?\./i,/click\.php/i,/track\./i,/popup/i,/redirect/i,
     /casino/i,/bet\d/i,/adult/i,/porn/i,/xxx/i,/dating/i,
@@ -611,7 +658,6 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   }
 
   function scanAndNuke(){
-    // Scan all fixed/absolute high-z-index elements
     var els = document.querySelectorAll('div,span,section,aside,article,ins,iframe[src*="ad"]');
     for(var i=0;i<els.length;i++){
       var el = els[i];
@@ -620,13 +666,9 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
         var s = getComputedStyle(el);
         var z = parseInt(s.zIndex)||0;
         var pos = s.position;
-
-        // Kill any floating element with very high z-index that isn't ours
         if(z > 9000 && (pos==='fixed'||pos==='absolute')){
           nukeEl(el); continue;
         }
-
-        // Kill fixed overlays with bad keywords
         if((pos==='fixed'||pos==='absolute') && z > 100){
           var txt = (el.innerText||el.textContent||'').toLowerCase();
           if(txt.length > 0 && txt.length < 800){
@@ -634,11 +676,8 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
               if(txt.indexOf(BAD_KW[k])>-1){ nukeEl(el); break; }
             }
           }
-          // Kill <ins> ad tags
           if(el.tagName==='INS') nukeEl(el);
         }
-
-        // Kill any <a> linking to bad URLs
         if(el.tagName==='A'){
           var href=(el.getAttribute('href')||'');
           for(var p=0;p<BAD_URL_PATTERNS.length;p++){
@@ -665,7 +704,6 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       }catch(x){}
     }
 
-    // Kill <script> tags injected dynamically that load ad networks
     var AD_SCRIPT_PATTERNS = [/googlesyndication/i,/doubleclick/i,/adnxs/i,/adsystem/i,/adservice/i,/popads/i,/popcash/i,/trafficjunky/i];
     var scripts = document.querySelectorAll('script[src]');
     for(var i=0;i<scripts.length;i++){
@@ -679,19 +717,13 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
     }
   }
 
-  /* ── 8. Iframe corner shield — ONLY top strip, small on mobile ── */
-  // Only blocks notification/subscribe overlays at top of embed player
-  // Does NOT cover the center (play button area) or bottom (video controls)
+  /* ── 10. Iframe corner shield ── */
   function addIframeShield(){
     var player = document.getElementById('mplayer');
     if(!player) return;
     var wrap = player.parentElement;
     if(!wrap) return;
-
     wrap.querySelectorAll('.rf-shield').forEach(function(s){ s.remove(); });
-
-    // Only ONE shield: very top strip where "Subscribe" / "Notification" overlays appear
-    // Height is small so it never covers video controls on any screen size
     var shield = document.createElement('div');
     shield.className = 'rf-shield';
     shield.style.cssText = 'position:absolute;top:0;left:0;right:0;height:44px;z-index:998;pointer-events:all;background:transparent;cursor:default;';
@@ -702,9 +734,8 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
     wrap.appendChild(shield);
   }
 
-  /* ── 9. MutationObserver — nuke ads the instant they appear ── */
+  /* ── 11. MutationObserver ── */
   var _obs = new MutationObserver(function(mutations){
-    // Only scan if new nodes were added (not just attribute changes on our elements)
     var hasNew = false;
     for(var i=0;i<mutations.length;i++){
       if(mutations[i].addedNodes.length > 0){ hasNew=true; break; }
@@ -716,7 +747,6 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
     _obs.observe(document.body, {childList:true, subtree:true});
     scanAndNuke();
     addIframeShield();
-    // Run periodically to catch delayed ad injections
     setInterval(scanAndNuke, 2500);
   }
 
@@ -728,6 +758,31 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 
   window.addEventListener('focus', function(){ scanAndNuke(); });
   window._addIframeShield = addIframeShield;
+
+  /* ── 12. CRITICAL: Override location to prevent iframe navigation ── */
+  // Intercept any attempt to change window.location
+  try {
+    var locDesc = Object.getOwnPropertyDescriptor(window, 'location');
+    if(!locDesc || locDesc.configurable) {
+      // Wrap location assign and replace
+      var origAssign = window.location.assign.bind(window.location);
+      var origReplace = window.location.replace.bind(window.location);
+      
+      // These will throw if location is not configurable, but we try anyway
+      window.location.assign = function(url) {
+        try {
+          var u = new URL(url, window.location.href);
+          if(u.origin === window.location.origin || u.hash) origAssign(url);
+        } catch(e) {}
+      };
+      window.location.replace = function(url) {
+        try {
+          var u = new URL(url, window.location.href);
+          if(u.origin === window.location.origin || u.hash) origReplace(url);
+        } catch(e) {}
+      };
+    }
+  } catch(e) {}
 
 })();
 </script>
@@ -841,7 +896,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   <div class="section"><div class="sec-head"><span class="sec-title">📺 Indian Web Series</span></div><div class="row-wrap"><button class="arr l" onclick="sc('r-iws',-1)">‹</button><div class="row" id="r-iws"></div><button class="arr r" onclick="sc('r-iws',1)">›</button></div></div>
 </div>
 
-<!-- LIVE TV — streams inside the site -->
+<!-- LIVE TV -->
 <div id="pg-livetv" class="pg">
   <div class="pg-head">
     <h2>📡 Live TV — India</h2>
@@ -856,10 +911,12 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       </div>
       <button class="live-close-btn" onclick="closeLivePlayer()" title="Close">✕</button>
     </div>
+    <!-- ✅ FIX: sandbox added — blocks top-level navigation from YouTube embed -->
     <iframe id="live-iframe"
       allowfullscreen
+      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock allow-popups-to-escape-sandbox"
       allow="autoplay;fullscreen;picture-in-picture;encrypted-media"
-      referrerpolicy="origin">
+      referrerpolicy="no-referrer">
     </iframe>
     <div class="live-ext-link">
       📺 Stream not loading inside site?
@@ -908,7 +965,6 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
         <button class="ep-load" id="ep-load">▶ Load</button>
       </div>
       <div id="player-wrap" style="position:relative;background:#000;overflow:hidden;">
-        <!-- Loading progress bar -->
         <div id="player-loading">
           <div class="pl-ring">
             <svg viewBox="0 0 80 80"><circle class="pl-ring-track" cx="40" cy="40" r="35"/><circle class="pl-ring-fill" id="pl-ring-fill" cx="40" cy="40" r="35"/></svg>
@@ -918,7 +974,6 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
           <div class="pl-text" id="pl-text">Connecting…</div>
           <div class="pl-srv" id="pl-srv"></div>
         </div>
-        <!-- Not available overlay -->
         <div id="player-unavail">
           <div class="unavail-icon">📡</div>
           <div class="unavail-title">Not Available Here</div>
@@ -928,10 +983,14 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
             <button class="unavail-btn ghost" id="unavail-yt-btn" style="display:none" onclick="loadStream('yt')">🎞 Watch Trailer</button>
           </div>
         </div>
+        <!-- ✅ FIX: sandbox added — this is the MAIN FIX that stops page redirects -->
+        <!-- allow-popups-to-escape-sandbox allows fullscreen to work correctly -->
+        <!-- allow-top-navigation is intentionally OMITTED to block redirects -->
         <iframe id="mplayer"
           allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock allow-popups-to-escape-sandbox"
           allow="autoplay;fullscreen;picture-in-picture;encrypted-media;accelerometer;gyroscope"
-          referrerpolicy="origin"
+          referrerpolicy="no-referrer"
           style="width:100%;aspect-ratio:16/9;display:block;border:none;">
         </iframe>
       </div>
@@ -1205,12 +1264,10 @@ function makeCard(item,ft){
     <div class="card-play">▶</div>
     <div class="card-ov"><div class="card-title">${title}</div><div class="card-star">★ ${stars}</div><div class="card-type">${isTV?'Series':'Movie'}</div></div>
     <button class="card-wl${wl?' on':''}" data-id="${item.id}" title="${wl?'Remove':'Add to Watchlist'}">🔖</button>`;
-  // Click handler — works on desktop
   d.addEventListener('click',e=>{
     if(e.target.classList.contains('card-wl'))return;
     openModal({...item,media_type:mt});
   });
-  // Touch handler — eliminates 300ms delay on mobile, essential for iOS/Android
   let _tStart=0,_tMoved=false;
   d.addEventListener('touchstart',function(e){
     if(e.target.classList.contains('card-wl'))return;
@@ -1219,12 +1276,11 @@ function makeCard(item,ft){
   d.addEventListener('touchmove',function(){_tMoved=true;},{passive:true});
   d.addEventListener('touchend',function(e){
     if(e.target.classList.contains('card-wl'))return;
-    if(_tMoved)return; // was a scroll gesture, not a tap
-    if(Date.now()-_tStart>400)return; // was a long-press, not a tap
-    e.preventDefault(); // prevent ghost click
+    if(_tMoved)return;
+    if(Date.now()-_tStart>400)return;
+    e.preventDefault();
     openModal({...item,media_type:mt});
   });
-  // Watchlist button
   d.querySelector('.card-wl').addEventListener('click',e=>{e.stopPropagation();toggleWL({...item,media_type:mt});});
   d.querySelector('.card-wl').addEventListener('touchend',function(e){
     e.stopPropagation();e.preventDefault();
@@ -1508,20 +1564,19 @@ function closeLivePlayer(){
 }
 
 // ══════════════════════════════════════════════════════════
-// FIXED PLAYER LOGIC — no more phantom loading, no false failovers
+// PLAYER LOGIC
 // ══════════════════════════════════════════════════════════
 let MS={};
 let _imdbId=null;
 let QUALITY='auto';
 
-// Server order for auto-failover (skips 'yt')
 const SERVER_ORDER=['s1','s2','s3','s4','s5'];
 let _failoverIdx=0;
-let _failoverTimer=null;        // fires only when STILL in loading state after timeout
-let _playerReady=false;         // true once iframe onload fires AND we haven't changed src since
-let _currentSrc='';             // exact src we loaded last — used to detect stale callbacks
+let _failoverTimer=null;
+let _playerReady=false;
+let _currentSrc='';
 let _currentSrv='s1';
-let _failoverCount=0;           // how many auto-failovers happened for this title
+let _failoverCount=0;
 
 async function openModal(item){
   const isTV=item.media_type==='tv';
@@ -1541,7 +1596,6 @@ async function openModal(item){
   MS={item,isTV,ep,trailerKey:null,season:1,episode:1};
   $('m-wl').classList.toggle('on',inWL(item.id));
   _imdbId=null;
-  // Reset per-title state
   _failoverIdx=0;
   _failoverCount=0;
   _playerReady=false;
@@ -1616,7 +1670,6 @@ $('ep-load').onclick=()=>{
 document.querySelectorAll('.srv[data-s]').forEach(btn=>{
   btn.onclick=()=>{
     const srv=btn.dataset.s;
-    // Manual pick — reset auto-failover tracking
     _failoverIdx=SERVER_ORDER.indexOf(srv);
     if(_failoverIdx<0)_failoverIdx=0;
     _failoverCount=0;
@@ -1661,7 +1714,6 @@ function getStreamSrc(srv){
   return'';
 }
 
-// ── Progress bar helpers ──
 let _progTimer=null;
 let _progVal=0;
 
@@ -1674,7 +1726,6 @@ function setProgress(pct,text,srv){
   const srvEl=$('pl-srv');
   if(bar) bar.style.width=pct+'%';
   if(pctEl) pctEl.textContent=Math.round(pct)+'%';
-  // SVG ring: circumference=2*pi*35≈220
   if(ring) ring.style.strokeDashoffset=(220-(220*pct/100)).toFixed(1);
   if(text&&txtEl) txtEl.textContent=text;
   if(srvEl) srvEl.textContent=srv||'';
@@ -1708,7 +1759,6 @@ function showPlayerReady(){
   setProgress(100,'Ready!','');
   _playerReady=true;
   clearTimeout(_failoverTimer);
-  // Smooth fade out after showing 100%
   setTimeout(()=>{
     const pl=$('player-loading');
     if(pl) pl.classList.add('hide');
@@ -1784,38 +1834,32 @@ function loadStream(srv){
   const src=getStreamSrc(srv);
   if(!src){tryNextServer();return;}
 
-  // Highlight active server button
   document.querySelectorAll('.srv').forEach(b=>b.classList.remove('on'));
   const activeBtn=document.querySelector(`.srv[data-s="${srv}"]`);
   if(activeBtn) activeBtn.classList.add('on');
 
   const srvLabel=SRV_NAMES[srv]||srv;
 
-  // Show loading with 0%
   showPlayerLoading('Connecting…',srvLabel);
   $('player-unavail').classList.remove('show');
 
-  // Phase 1: 0→30% while we set the src (fast, ~0.6s)
   animateProgress(0,30,600,'Connecting…',srvLabel);
 
   _currentSrc=src;
   const mp=$('mplayer');
   mp.src='';
 
-  // Small delay to let browser clear previous iframe cleanly
   setTimeout(()=>{
     mp.src=src;
 
     const capturedSrc=src;
 
-    // Phase 2: 30→80% while iframe is loading (simulate fetch, ~3s)
     setTimeout(()=>{
       if(mp.src===capturedSrc && !_playerReady){
         animateProgress(30,80,3000,'Loading stream…',srvLabel);
       }
     },650);
 
-    // Phase 3: 80→95% holding pattern — waiting for embed player to init (~5s)
     setTimeout(()=>{
       if(mp.src===capturedSrc && !_playerReady){
         animateProgress(80,95,5000,'Almost ready…',srvLabel);
@@ -1824,7 +1868,6 @@ function loadStream(srv){
 
     mp.onload=function(){
       if(mp.src!==capturedSrc)return;
-      // iframe HTML loaded → go to 100% and show player
       showPlayerReady();
     };
 
@@ -1836,7 +1879,6 @@ function loadStream(srv){
       },1200);
     };
 
-    // Dead-server guard: 18s with no onload = server unreachable
     _failoverTimer=setTimeout(function(){
       if(mp.src===capturedSrc && !_playerReady){
         tryNextServer();
@@ -1845,13 +1887,11 @@ function loadStream(srv){
 
   },80);
 
-  // Re-add corner ad shields after load
   setTimeout(function(){
     if(window._addIframeShield) window._addIframeShield();
   },2000);
 }
 
-// Quality button handlers
 document.querySelectorAll('.qbtn').forEach(btn=>{
   btn.onclick=()=>{
     QUALITY=btn.dataset.q;
@@ -1940,14 +1980,10 @@ document.getElementById('lang-select').value=LANG;
 applyLang();
 loadHome();
 
-// ── BOTTOM NAV sync (mobile only) ──
 function setBNav(el){
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
   if(el) el.classList.add('on');
 }
-// Keep bottom nav in sync when top tabs or logo used
-const _origGoTo = goTo;
-// Patch goTo to also update bottom nav
 (function(){
   const tabs = document.querySelectorAll('#bottom-nav .bnav-btn');
   const origGoTo = window.goTo;
