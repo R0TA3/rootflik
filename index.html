@@ -98,10 +98,10 @@ img{display:block}
 .arr.l{left:3px}.arr.r{right:3px}
 
 /* ── CARDS ── */
-.card{flex:0 0 140px;position:relative;border-radius:var(--rc);overflow:hidden;cursor:pointer;transition:transform .22s,box-shadow .22s;background:var(--layer);}
+.card{flex:0 0 140px;position:relative;border-radius:var(--rc);overflow:hidden;cursor:pointer;transition:transform .22s,box-shadow .22s;background:var(--layer);touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 .card:hover{transform:scale(1.07) translateY(-3px);z-index:10;box-shadow:0 16px 40px rgba(0,0,0,.7)}
 .card img{width:100%;aspect-ratio:2/3;object-fit:cover}
-.card-ov{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.96) 0%,rgba(0,0,0,.3) 55%,transparent 80%);opacity:0;transition:opacity .2s;display:flex;flex-direction:column;justify-content:flex-end;padding:9px;}
+.card-ov{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.96) 0%,rgba(0,0,0,.3) 55%,transparent 80%);opacity:0;transition:opacity .2s;display:flex;flex-direction:column;justify-content:flex-end;padding:9px;pointer-events:none;}
 .card:hover .card-ov{opacity:1}
 .card-title{font-size:.7rem;font-weight:800;line-height:1.3}
 .card-star{font-size:.62rem;color:var(--gold);margin-top:3px;font-weight:700}
@@ -290,7 +290,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   .card{flex:0 0 120px}
   .card img{border-radius:8px}
   .card .card-play{transform:translate(-50%,-50%) scale(.85);opacity:.85;}
-  .card .card-ov{opacity:1;background:linear-gradient(0deg,rgba(0,0,0,.92) 0%,rgba(0,0,0,.1) 60%,transparent 100%)}
+  .card .card-ov{opacity:1;background:linear-gradient(0deg,rgba(0,0,0,.92) 0%,rgba(0,0,0,.1) 60%,transparent 100%);pointer-events:none;}
   .card .card-wl{opacity:1}
   .card:active{transform:scale(.96);transition:transform .1s}
   .card-wl{width:30px;height:30px;font-size:.75rem}
@@ -356,7 +356,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 }
 
 /* ── NEW RELEASES BADGE ── */
-.new-badge{position:absolute;top:6px;left:6px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:.48rem;font-weight:900;padding:2px 6px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase;z-index:6;animation:pulse-badge 2s infinite;}
+.new-badge{position:absolute;top:6px;left:6px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:.48rem;font-weight:900;padding:2px 6px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase;z-index:6;animation:pulse-badge 2s infinite;pointer-events:none;}
 @keyframes pulse-badge{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 4px rgba(34,197,94,0)}}
 
 /* ── QUALITY BADGE ── */
@@ -424,19 +424,54 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 #player-wrap{position:relative;background:#000;overflow:hidden;}
 #player-loading{
   position:absolute;inset:0;z-index:60;
-  background:#000;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
-  transition:opacity .3s;
+  background:linear-gradient(135deg,#0a0a0c 0%,#111115 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  transition:opacity .4s ease;
 }
 #player-loading.hide{opacity:0;pointer-events:none;}
-.spin{
-  width:40px;height:40px;border-radius:50%;
-  border:3px solid rgba(229,9,20,.2);
-  border-top-color:var(--red);
-  animation:spin .8s linear infinite;
+/* Progress bar container */
+.pl-bar-wrap{
+  width:min(280px,70vw);
+  background:rgba(255,255,255,.08);
+  border-radius:20px;height:6px;overflow:hidden;
+  position:relative;
 }
+.pl-bar{
+  height:100%;border-radius:20px;
+  background:linear-gradient(90deg,var(--red),#ff6b35);
+  width:0%;
+  transition:width .35s ease;
+  box-shadow:0 0 12px rgba(229,9,20,.5);
+}
+/* Shimmer animation on bar */
+.pl-bar::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.3) 50%,transparent 100%);
+  animation:pl-shimmer 1.2s infinite;
+  border-radius:20px;
+}
+@keyframes pl-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+.pl-pct{
+  font-family:'Bebas Neue',sans-serif;font-size:2.2rem;
+  color:#fff;letter-spacing:2px;line-height:1;
+  text-shadow:0 0 20px rgba(229,9,20,.4);
+}
+.pl-text{font-size:.72rem;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.8px;margin-top:2px;}
+.pl-srv{font-size:.6rem;font-weight:800;color:rgba(229,9,20,.7);letter-spacing:1px;text-transform:uppercase;}
+/* Spinning ring around percentage */
+.pl-ring{
+  position:relative;width:80px;height:80px;
+  display:flex;align-items:center;justify-content:center;
+}
+.pl-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.pl-ring-track{fill:none;stroke:rgba(255,255,255,.06);stroke-width:4}
+.pl-ring-fill{fill:none;stroke:var(--red);stroke-width:4;stroke-linecap:round;
+  stroke-dasharray:220;stroke-dashoffset:220;
+  transition:stroke-dashoffset .35s ease;
+  filter:drop-shadow(0 0 6px rgba(229,9,20,.6));
+}
+.spin{display:none}/* hide old spinner - replaced by ring */
 @keyframes spin{to{transform:rotate(360deg)}}
-.pl-text{font-size:.75rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.5px;}
 
 #player-unavail{
   position:absolute;inset:0;z-index:61;
@@ -462,132 +497,227 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 </head>
 <body>
 
-<!-- ════════ SECURITY SHIELD ════════ -->
+<!-- ════════ SECURITY SHIELD v4 — mobile-safe, nuclear ad block ════════ -->
 <script>
 (function(){
   'use strict';
 
+  /* ── 1. Kill all popup/dialog APIs ── */
   window.open = function(){ return null; };
   window.alert = function(){};
   window.confirm = function(){ return false; };
   window.prompt = function(){ return null; };
 
-  document.addEventListener('click', function(e){
-    const a = e.target.closest('a[href]');
+  /* ── 2. OUR safe elements — never nuke these ── */
+  var SAFE_IDS = new Set(['nav','bottom-nav','modal','toast','hero','mplayer','player-wrap',
+    'player-loading','player-unavail','pg-home','pg-movies','pg-series','pg-indian',
+    'pg-livetv','pg-wl','srch-res','srch-in','wl-badge','lang-selector','live-player-wrap']);
+  var SAFE_CLASSES = new Set(['card','card-ov','card-play','card-wl','new-badge',
+    'mbox','srv-bar','qual-bar','ep-bar','mbody','pl-ring','pl-bar-wrap',
+    'section','row','row-wrap','gbar','gbtn','tab','bnav-btn','ch','ltab',
+    'hero-body','hero-btns','btn','logo','sri','pg','pg-head','wl-grid',
+    'plat-row','sim-row','sec-head','sec-title','lang-tabs','ch-grid']);
+
+  function isSafeEl(el){
+    if(!el || el===document.body || el===document.documentElement) return true;
+    if(SAFE_IDS.has(el.id)) return true;
+    // Check if any class matches safe list
+    var cls = (el.className||'').split(' ');
+    for(var i=0;i<cls.length;i++){
+      if(SAFE_CLASSES.has(cls[i])) return true;
+    }
+    // Walk up — if inside any safe container, it's safe
+    var p = el.parentElement;
+    while(p && p!==document.body){
+      if(SAFE_IDS.has(p.id)) return true;
+      var pc=(p.className||'').split(' ');
+      for(var j=0;j<pc.length;j++){
+        if(SAFE_CLASSES.has(pc[j])) return true;
+      }
+      p = p.parentElement;
+    }
+    return false;
+  }
+
+  /* ── 3. Block external navigation (click + touchend) ── */
+  function blockExternalNav(e){
+    var a = e.target ? e.target.closest('a[href]') : null;
     if(!a) return;
-    const h = (a.getAttribute('href')||'').trim();
-    if(!h || h.startsWith('#')) return;
+    var h = (a.getAttribute('href')||'').trim();
+    if(!h || h.startsWith('#') || h.startsWith('mailto:')) return;
+    // Allow Instagram link and platform buttons
     if(h.includes('instagram.com')) return;
-    if(a.classList.contains('plat-btn') && a.target==='_blank') return;
-    if(h.startsWith('http') || h.startsWith('//') || a.target==='_blank'){
+    if(a.classList.contains('plat-btn')) return;
+    // Block everything else that goes external
+    if(h.startsWith('http')||h.startsWith('//')||a.target==='_blank'){
       e.preventDefault();
       e.stopImmediatePropagation();
       return false;
     }
-  }, true);
+  }
+  document.addEventListener('click', blockExternalNav, true);
+  document.addEventListener('touchend', blockExternalNav, true);
 
+  /* ── 4. Block form submissions to external ── */
   document.addEventListener('submit', function(e){
-    if(e.target.action && !e.target.action.includes(location.hostname)) e.preventDefault();
+    try{ if(e.target.action && !e.target.action.includes(location.hostname)) e.preventDefault(); }catch(x){}
   }, true);
 
+  /* ── 5. Block postMessages from iframes ── */
   window.addEventListener('message', function(e){
-    if(e.origin !== location.origin){
-      e.stopImmediatePropagation();
+    if(e.origin && e.origin !== location.origin){
+      try{ e.stopImmediatePropagation(); }catch(x){}
     }
   }, true);
 
-  function addIframeShield(){
-    const player = document.getElementById('mplayer');
-    if(!player) return;
-    const wrap = player.parentElement;
-    if(!wrap) return;
-
-    wrap.querySelectorAll('.rf-shield').forEach(s=>s.remove());
-
-    const positions = [
-      {top:'0',left:'0',right:'0',height:'80px'},
-      {bottom:'40px',right:'0',width:'200px',height:'80px'},
-      {top:'0',right:'0',width:'180px',height:'100px'},
-      {top:'0',left:'0',width:'180px',height:'100px'},
-    ];
-
-    positions.forEach(function(pos){
-      const shield = document.createElement('div');
-      shield.className = 'rf-shield';
-      shield.style.cssText = 'position:absolute;z-index:999;pointer-events:all;background:transparent;cursor:default;';
-      Object.assign(shield.style, pos);
-      shield.addEventListener('click', function(e){
-        e.stopPropagation();
+  /* ── 6. Block touch redirects — touchstart on suspicious overlays ── */
+  document.addEventListener('touchstart', function(e){
+    var el = e.target;
+    if(!el) return;
+    // If touch is on something with a super-high z-index that isn't ours, kill it
+    try{
+      var s = getComputedStyle(el);
+      var z = parseInt(s.zIndex)||0;
+      if(z > 9000 && !isSafeEl(el)){
         e.preventDefault();
-      });
-      shield.addEventListener('mousedown', function(e){ e.stopPropagation(); });
-      wrap.appendChild(shield);
-    });
-  }
+        e.stopImmediatePropagation();
+        nukeEl(el);
+      }
+    }catch(x){}
+  }, {passive:false, capture:true});
 
-  const BAD_KEYWORDS = [
-    'missed','video call','join now','click here',
-    'casino','bet','adult','webcam','dating',
-    'prize','winner','bonus','deposit','loan',
-    'notification','subscribe now','spin','free spin',
-    'hot girls','chat now','meet','singles'
-  ];
-  const BAD_SELECTORS = [
-    '[class*="notif"]','[class*="overlay"]','[class*="popup"]',
-    '[class*="modal"]','[id*="popup"]','[id*="overlay"]',
-    '[id*="notif"]','[class*="toast"]','[class*="banner-ad"]',
-    '[class*="ad-container"]','[class*="interstitial"]',
-    '[style*="z-index: 9"]','[style*="z-index:9"]',
+  /* ── 7. Nuke ad elements ── */
+  var BAD_KW = ['casino','bet365','adult content','webcam','dating site',
+    'free spin','hot girls','chat now','meet singles','click to win',
+    'congratulations you','you have been selected','claim your prize',
+    'download now','install now','virus detected','your device'];
+
+  // Ad URL patterns — block any <a> linking to these
+  var BAD_URL_PATTERNS = [
+    /ad[sx]?\./i,/click\.php/i,/track\./i,/popup/i,/redirect/i,
+    /casino/i,/bet\d/i,/adult/i,/porn/i,/xxx/i,/dating/i,
+    /download.*\.exe/i,/\.ru\//i,/advert/i
   ];
 
   function nukeEl(el){
     try{
-      el.style.cssText='display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;width:0!important;height:0!important;';
+      el.style.setProperty('display','none','important');
+      el.style.setProperty('visibility','hidden','important');
+      el.style.setProperty('opacity','0','important');
+      el.style.setProperty('pointer-events','none','important');
+      el.style.setProperty('z-index','-9999','important');
       if(el.parentNode) el.parentNode.removeChild(el);
     }catch(e){}
   }
 
   function scanAndNuke(){
-    document.querySelectorAll('div,section,article,aside').forEach(function(el){
+    // Scan all fixed/absolute high-z-index elements
+    var els = document.querySelectorAll('div,span,section,aside,article,ins,iframe[src*="ad"]');
+    for(var i=0;i<els.length;i++){
+      var el = els[i];
       try{
-        if(el.id && ['nav','modal','toast','hero','mplayer','player-wrap'].includes(el.id)) return;
-        if(el.closest('#nav,#modal,#toast,#hero,.mbox,.pg')) return;
+        if(isSafeEl(el)) continue;
+        var s = getComputedStyle(el);
+        var z = parseInt(s.zIndex)||0;
+        var pos = s.position;
 
-        const s = getComputedStyle(el);
-        const z = parseInt(s.zIndex)||0;
-        const pos = s.position;
+        // Kill any floating element with very high z-index that isn't ours
+        if(z > 9000 && (pos==='fixed'||pos==='absolute')){
+          nukeEl(el); continue;
+        }
 
-        if((pos==='fixed'||pos==='absolute') && z>100){
-          const txt = (el.innerText||el.textContent||'').toLowerCase().trim();
-          if(txt.length > 0 && txt.length < 500){
-            if(BAD_KEYWORDS.some(kw=>txt.includes(kw))){
-              nukeEl(el); return;
+        // Kill fixed overlays with bad keywords
+        if((pos==='fixed'||pos==='absolute') && z > 100){
+          var txt = (el.innerText||el.textContent||'').toLowerCase();
+          if(txt.length > 0 && txt.length < 800){
+            for(var k=0;k<BAD_KW.length;k++){
+              if(txt.indexOf(BAD_KW[k])>-1){ nukeEl(el); break; }
             }
           }
-          if(z>9000){ nukeEl(el); return; }
+          // Kill <ins> ad tags
+          if(el.tagName==='INS') nukeEl(el);
         }
-      }catch(err){}
-    });
 
-    BAD_SELECTORS.forEach(function(sel){
+        // Kill any <a> linking to bad URLs
+        if(el.tagName==='A'){
+          var href=(el.getAttribute('href')||'');
+          for(var p=0;p<BAD_URL_PATTERNS.length;p++){
+            if(BAD_URL_PATTERNS[p].test(href)){ nukeEl(el); break; }
+          }
+        }
+      }catch(x){}
+    }
+
+    // Kill ad iframes (not our mplayer/live-iframe)
+    var iframes = document.querySelectorAll('iframe');
+    for(var i=0;i<iframes.length;i++){
+      var f = iframes[i];
+      if(f.id==='mplayer'||f.id==='live-iframe') continue;
       try{
-        document.querySelectorAll(sel).forEach(function(el){
-          if(el.closest('#nav,#modal,#toast,.mbox,.pg')) return;
-          const txt=(el.innerText||'').toLowerCase();
-          if(BAD_KEYWORDS.some(kw=>txt.includes(kw))) nukeEl(el);
-        });
-      }catch(err){}
-    });
+        var src = f.src||f.getAttribute('src')||'';
+        for(var p=0;p<BAD_URL_PATTERNS.length;p++){
+          if(BAD_URL_PATTERNS[p].test(src)){ nukeEl(f); break; }
+        }
+        var fs = getComputedStyle(f);
+        if((fs.position==='fixed'||fs.position==='absolute') && parseInt(fs.zIndex)>1000){
+          nukeEl(f);
+        }
+      }catch(x){}
+    }
+
+    // Kill <script> tags injected dynamically that load ad networks
+    var AD_SCRIPT_PATTERNS = [/googlesyndication/i,/doubleclick/i,/adnxs/i,/adsystem/i,/adservice/i,/popads/i,/popcash/i,/trafficjunky/i];
+    var scripts = document.querySelectorAll('script[src]');
+    for(var i=0;i<scripts.length;i++){
+      var src = scripts[i].src||'';
+      for(var p=0;p<AD_SCRIPT_PATTERNS.length;p++){
+        if(AD_SCRIPT_PATTERNS[p].test(src)){
+          try{ scripts[i].parentNode.removeChild(scripts[i]); }catch(x){}
+          break;
+        }
+      }
+    }
   }
 
-  const _obs = new MutationObserver(function(){
-    scanAndNuke();
+  /* ── 8. Iframe corner shield — ONLY top strip, small on mobile ── */
+  // Only blocks notification/subscribe overlays at top of embed player
+  // Does NOT cover the center (play button area) or bottom (video controls)
+  function addIframeShield(){
+    var player = document.getElementById('mplayer');
+    if(!player) return;
+    var wrap = player.parentElement;
+    if(!wrap) return;
+
+    wrap.querySelectorAll('.rf-shield').forEach(function(s){ s.remove(); });
+
+    // Only ONE shield: very top strip where "Subscribe" / "Notification" overlays appear
+    // Height is small so it never covers video controls on any screen size
+    var shield = document.createElement('div');
+    shield.className = 'rf-shield';
+    shield.style.cssText = 'position:absolute;top:0;left:0;right:0;height:44px;z-index:998;pointer-events:all;background:transparent;cursor:default;';
+    shield.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); });
+    shield.addEventListener('touchstart', function(e){ e.stopPropagation(); e.preventDefault(); }, {passive:false});
+    shield.addEventListener('touchend', function(e){ e.stopPropagation(); e.preventDefault(); }, {passive:false});
+    shield.addEventListener('mousedown', function(e){ e.stopPropagation(); });
+    wrap.appendChild(shield);
+  }
+
+  /* ── 9. MutationObserver — nuke ads the instant they appear ── */
+  var _obs = new MutationObserver(function(mutations){
+    // Only scan if new nodes were added (not just attribute changes on our elements)
+    var hasNew = false;
+    for(var i=0;i<mutations.length;i++){
+      if(mutations[i].addedNodes.length > 0){ hasNew=true; break; }
+    }
+    if(hasNew) scanAndNuke();
   });
 
   function startObserver(){
-    _obs.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
+    _obs.observe(document.body, {childList:true, subtree:true});
     scanAndNuke();
     addIframeShield();
+    // Run periodically to catch delayed ad injections
+    setInterval(scanAndNuke, 2500);
   }
 
   if(document.readyState==='loading'){
@@ -596,9 +726,9 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
     startObserver();
   }
 
-  window.addEventListener('focus', function(){ scanAndNuke(); addIframeShield(); });
-  // expose for use in main script
+  window.addEventListener('focus', function(){ scanAndNuke(); });
   window._addIframeShield = addIframeShield;
+
 })();
 </script>
 
@@ -727,10 +857,9 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       <button class="live-close-btn" onclick="closeLivePlayer()" title="Close">✕</button>
     </div>
     <iframe id="live-iframe"
-      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
-      allow="autoplay;fullscreen"
-      referrerpolicy="no-referrer"
-      allowfullscreen>
+      allowfullscreen
+      allow="autoplay;fullscreen;picture-in-picture;encrypted-media"
+      referrerpolicy="origin">
     </iframe>
     <div class="live-ext-link">
       📺 Stream not loading inside site?
@@ -779,10 +908,15 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
         <button class="ep-load" id="ep-load">▶ Load</button>
       </div>
       <div id="player-wrap" style="position:relative;background:#000;overflow:hidden;">
-        <!-- Loading spinner -->
+        <!-- Loading progress bar -->
         <div id="player-loading">
-          <div class="spin"></div>
-          <div class="pl-text" id="pl-text">Loading stream…</div>
+          <div class="pl-ring">
+            <svg viewBox="0 0 80 80"><circle class="pl-ring-track" cx="40" cy="40" r="35"/><circle class="pl-ring-fill" id="pl-ring-fill" cx="40" cy="40" r="35"/></svg>
+            <span class="pl-pct" id="pl-pct">0%</span>
+          </div>
+          <div class="pl-bar-wrap"><div class="pl-bar" id="pl-bar"></div></div>
+          <div class="pl-text" id="pl-text">Connecting…</div>
+          <div class="pl-srv" id="pl-srv"></div>
         </div>
         <!-- Not available overlay -->
         <div id="player-unavail">
@@ -795,10 +929,9 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
           </div>
         </div>
         <iframe id="mplayer"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
           allowfullscreen
-          allow="autoplay;fullscreen;picture-in-picture;encrypted-media"
-          referrerpolicy="no-referrer"
+          allow="autoplay;fullscreen;picture-in-picture;encrypted-media;accelerometer;gyroscope"
+          referrerpolicy="origin"
           style="width:100%;aspect-ratio:16/9;display:block;border:none;">
         </iframe>
       </div>
@@ -1072,8 +1205,31 @@ function makeCard(item,ft){
     <div class="card-play">▶</div>
     <div class="card-ov"><div class="card-title">${title}</div><div class="card-star">★ ${stars}</div><div class="card-type">${isTV?'Series':'Movie'}</div></div>
     <button class="card-wl${wl?' on':''}" data-id="${item.id}" title="${wl?'Remove':'Add to Watchlist'}">🔖</button>`;
-  d.addEventListener('click',e=>{if(e.target.classList.contains('card-wl'))return;openModal({...item,media_type:mt});});
+  // Click handler — works on desktop
+  d.addEventListener('click',e=>{
+    if(e.target.classList.contains('card-wl'))return;
+    openModal({...item,media_type:mt});
+  });
+  // Touch handler — eliminates 300ms delay on mobile, essential for iOS/Android
+  let _tStart=0,_tMoved=false;
+  d.addEventListener('touchstart',function(e){
+    if(e.target.classList.contains('card-wl'))return;
+    _tStart=Date.now();_tMoved=false;
+  },{passive:true});
+  d.addEventListener('touchmove',function(){_tMoved=true;},{passive:true});
+  d.addEventListener('touchend',function(e){
+    if(e.target.classList.contains('card-wl'))return;
+    if(_tMoved)return; // was a scroll gesture, not a tap
+    if(Date.now()-_tStart>400)return; // was a long-press, not a tap
+    e.preventDefault(); // prevent ghost click
+    openModal({...item,media_type:mt});
+  });
+  // Watchlist button
   d.querySelector('.card-wl').addEventListener('click',e=>{e.stopPropagation();toggleWL({...item,media_type:mt});});
+  d.querySelector('.card-wl').addEventListener('touchend',function(e){
+    e.stopPropagation();e.preventDefault();
+    toggleWL({...item,media_type:mt});
+  });
   return d;
 }
 function fillRow(id,items,type){
@@ -1505,41 +1661,80 @@ function getStreamSrc(srv){
   return'';
 }
 
-function showPlayerLoading(text){
+// ── Progress bar helpers ──
+let _progTimer=null;
+let _progVal=0;
+
+function setProgress(pct,text,srv){
+  _progVal=pct;
+  const bar=$('pl-bar');
+  const pctEl=$('pl-pct');
+  const ring=$('pl-ring-fill');
+  const txtEl=$('pl-text');
+  const srvEl=$('pl-srv');
+  if(bar) bar.style.width=pct+'%';
+  if(pctEl) pctEl.textContent=Math.round(pct)+'%';
+  // SVG ring: circumference=2*pi*35≈220
+  if(ring) ring.style.strokeDashoffset=(220-(220*pct/100)).toFixed(1);
+  if(text&&txtEl) txtEl.textContent=text;
+  if(srvEl) srvEl.textContent=srv||'';
+}
+
+function animateProgress(from,to,durationMs,text,srv){
+  clearInterval(_progTimer);
+  const steps=40;
+  const interval=durationMs/steps;
+  let cur=from;
+  const inc=(to-from)/steps;
+  setProgress(cur,text,srv);
+  _progTimer=setInterval(()=>{
+    cur+=inc;
+    if(cur>=to){cur=to;clearInterval(_progTimer);}
+    setProgress(cur,text,srv);
+  },interval);
+}
+
+function showPlayerLoading(text,srv){
+  clearInterval(_progTimer);
   const pl=$('player-loading');
   const pu=$('player-unavail');
-  if(pl){pl.classList.remove('hide');if(text&&$('pl-text'))$('pl-text').textContent=text;}
-  if(pu)pu.classList.remove('show');
+  if(pl) pl.classList.remove('hide');
+  if(pu) pu.classList.remove('show');
+  setProgress(0,text||'Connecting…',srv||'');
 }
 
 function showPlayerReady(){
-  // Only hide the spinner — never interrupt the actual video
-  const pl=$('player-loading');
-  if(pl)pl.classList.add('hide');
-  const pu=$('player-unavail');
-  if(pu)pu.classList.remove('show');
+  clearInterval(_progTimer);
+  setProgress(100,'Ready!','');
   _playerReady=true;
-  clearTimeout(_failoverTimer); // stream is playing, cancel any pending failover
+  clearTimeout(_failoverTimer);
+  // Smooth fade out after showing 100%
+  setTimeout(()=>{
+    const pl=$('player-loading');
+    if(pl) pl.classList.add('hide');
+  },400);
+  const pu=$('player-unavail');
+  if(pu) pu.classList.remove('show');
 }
 
 function showPlayerUnavail(allFailed){
+  clearInterval(_progTimer);
   clearTimeout(_failoverTimer);
   const pl=$('player-loading');
-  if(pl)pl.classList.add('hide');
+  if(pl) pl.classList.add('hide');
   const pu=$('player-unavail');
   if(!pu)return;
   $('unavail-sub').textContent=allFailed
-    ?'This title is not available on any server right now. Try the trailer or check back later.'
-    :'This title is not on this server. Trying next server…';
+    ?'Not available on any server right now. Try the trailer or check back later.'
+    :'Not on this server. Trying next server…';
   const ytBtn=$('unavail-yt-btn');
-  if(ytBtn)ytBtn.style.display=MS.trailerKey?'block':'none';
+  if(ytBtn) ytBtn.style.display=MS.trailerKey?'block':'none';
   pu.classList.add('show');
 }
 
 function tryNextServer(){
   const order=SERVER_ORDER;
   _failoverCount++;
-  // After trying all 5 servers, give up
   if(_failoverCount>=order.length){
     showPlayerUnavail(true);
     return;
@@ -1549,6 +1744,8 @@ function tryNextServer(){
   loadStream(next);
 }
 
+const SRV_NAMES={s1:'VidSrc',s2:'VidLink',s3:'2Embed',s4:'EmbedSu',s5:'AutoEmbed',yt:'Trailer'};
+
 function loadStream(srv){
   if(!MS.item)return;
 
@@ -1557,20 +1754,22 @@ function loadStream(srv){
       _currentSrv='yt';
       _playerReady=false;
       clearTimeout(_failoverTimer);
-      showPlayerLoading('Loading trailer…');
+      clearInterval(_progTimer);
+      showPlayerLoading('Loading trailer…','Trailer');
+      animateProgress(0,85,2000,'Loading trailer…','Trailer');
       const src=getStreamSrc('yt');
       _currentSrc=src;
-      $('mplayer').src='';
-      requestAnimationFrame(()=>{
-        $('mplayer').src=src;
-        // Trailer: hide spinner after iframe loads — no failover needed
-        $('mplayer').onload=function(){
-          if($('mplayer').src===_currentSrc) showPlayerReady();
+      const mp=$('mplayer');
+      mp.src='';
+      setTimeout(()=>{
+        mp.src=src;
+        mp.onload=function(){
+          if(mp.src===_currentSrc) showPlayerReady();
         };
-        $('mplayer').onerror=function(){
-          if($('mplayer').src===_currentSrc) showPlayerUnavail(false);
+        mp.onerror=function(){
+          if(mp.src===_currentSrc) showPlayerUnavail(false);
         };
-      });
+      },50);
     }else{
       toast(L.noTrailer||'No trailer found','warn');
     }
@@ -1580,76 +1779,76 @@ function loadStream(srv){
   _currentSrv=srv;
   _playerReady=false;
   clearTimeout(_failoverTimer);
+  clearInterval(_progTimer);
 
   const src=getStreamSrc(srv);
   if(!src){tryNextServer();return;}
 
-  // Update server button highlight
+  // Highlight active server button
   document.querySelectorAll('.srv').forEach(b=>b.classList.remove('on'));
   const activeBtn=document.querySelector(`.srv[data-s="${srv}"]`);
-  if(activeBtn)activeBtn.classList.add('on');
+  if(activeBtn) activeBtn.classList.add('on');
 
-  showPlayerLoading(`Connecting to server…`);
+  const srvLabel=SRV_NAMES[srv]||srv;
+
+  // Show loading with 0%
+  showPlayerLoading('Connecting…',srvLabel);
   $('player-unavail').classList.remove('show');
 
+  // Phase 1: 0→30% while we set the src (fast, ~0.6s)
+  animateProgress(0,30,600,'Connecting…',srvLabel);
+
   _currentSrc=src;
-  $('mplayer').src='';
+  const mp=$('mplayer');
+  mp.src='';
 
-  requestAnimationFrame(()=>{
-    $('mplayer').src=src;
+  // Small delay to let browser clear previous iframe cleanly
+  setTimeout(()=>{
+    mp.src=src;
 
-    /*
-     * KEY FIX — what was happening:
-     * 1. iframe.onload fires almost immediately (when the embed page's HTML arrives),
-     *    even before any video has buffered or started playing.
-     * 2. Old code called showPlayerReady() inside onload after a 2.5s setTimeout,
-     *    which dismissed the spinner but the video was still buffering — confusing users.
-     * 3. Then a second 12s timer ALSO fired and tried to switch servers, interrupting
-     *    a stream that was just slowly buffering on a slow connection (like 4G in India).
-     *
-     * NEW BEHAVIOUR:
-     * • onload → hides the spinner immediately (page is there, video is loading/buffering)
-     * • No auto-failover timer fires once onload has happened.
-     *   The user sees the player controls and the video buffers naturally.
-     * • Only if the iframe NEVER fires onload within 20s (dead server / network error)
-     *   do we auto-switch servers. 20s is generous enough for slow Indian connections.
-     * • onerror → immediate switch to next server.
-     * • If the server tab was switched manually, old callbacks are ignored via _currentSrc check.
-     */
+    const capturedSrc=src;
 
-    const capturedSrc=src; // closure capture
+    // Phase 2: 30→80% while iframe is loading (simulate fetch, ~3s)
+    setTimeout(()=>{
+      if(mp.src===capturedSrc && !_playerReady){
+        animateProgress(30,80,3000,'Loading stream…',srvLabel);
+      }
+    },650);
 
-    $('mplayer').onload=function(){
-      // Ignore stale callbacks from previous server loads
-      if($('mplayer').src!==capturedSrc)return;
-      // Page loaded — dismiss spinner, let the video buffer on its own
+    // Phase 3: 80→95% holding pattern — waiting for embed player to init (~5s)
+    setTimeout(()=>{
+      if(mp.src===capturedSrc && !_playerReady){
+        animateProgress(80,95,5000,'Almost ready…',srvLabel);
+      }
+    },3700);
+
+    mp.onload=function(){
+      if(mp.src!==capturedSrc)return;
+      // iframe HTML loaded → go to 100% and show player
       showPlayerReady();
-      // No failover timer needed — stream is in the hands of the embed player now
     };
 
-    $('mplayer').onerror=function(){
-      if($('mplayer').src!==capturedSrc)return;
-      // Hard network error — try next server after a short pause
+    mp.onerror=function(){
+      if(mp.src!==capturedSrc)return;
       clearTimeout(_failoverTimer);
       _failoverTimer=setTimeout(()=>{
-        if($('mplayer').src===capturedSrc)tryNextServer();
-      },1500);
+        if(mp.src===capturedSrc) tryNextServer();
+      },1200);
     };
 
-    // Dead-server guard: if onload never fires after 20s, the server is unreachable
-    // This is MUCH more generous than the old 12s and only kicks in for truly dead servers
+    // Dead-server guard: 18s with no onload = server unreachable
     _failoverTimer=setTimeout(function(){
-      if($('mplayer').src===capturedSrc && !_playerReady){
-        // Still showing spinner after 20s — server is dead, try next
+      if(mp.src===capturedSrc && !_playerReady){
         tryNextServer();
       }
-    },20000);
-  });
+    },18000);
 
-  // Re-add corner ad shields
+  },80);
+
+  // Re-add corner ad shields after load
   setTimeout(function(){
-    if(window._addIframeShield)window._addIframeShield();
-  },1500);
+    if(window._addIframeShield) window._addIframeShield();
+  },2000);
 }
 
 // Quality button handlers
@@ -1670,14 +1869,14 @@ $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal();})
 
 function closeModal(){
   clearTimeout(_failoverTimer);
+  clearInterval(_progTimer);
   _playerReady=false;
   _currentSrc='';
   $('modal').classList.remove('on');
   document.body.style.overflow='';
-  // Reset player overlay states
   const pl=$('player-loading');
   const pu=$('player-unavail');
-  if(pl)pl.classList.remove('hide');
+  if(pl){pl.classList.remove('hide');setProgress(0,'Connecting…','');}
   if(pu)pu.classList.remove('show');
   setTimeout(()=>{
     const mp=$('mplayer');
