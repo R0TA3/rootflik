@@ -911,10 +911,10 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       </div>
       <button class="live-close-btn" onclick="closeLivePlayer()" title="Close">✕</button>
     </div>
-    <!-- ✅ FIX: sandbox added — blocks top-level navigation from YouTube embed -->
+    <!-- ✅ FIX: allow-popups added — required for YouTube embeds to initialize player -->
     <iframe id="live-iframe"
       allowfullscreen
-      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock allow-popups-to-escape-sandbox"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock allow-popups allow-popups-to-escape-sandbox"
       allow="autoplay;fullscreen;picture-in-picture;encrypted-media"
       referrerpolicy="no-referrer">
     </iframe>
@@ -983,12 +983,11 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
             <button class="unavail-btn ghost" id="unavail-yt-btn" style="display:none" onclick="loadStream('yt')">🎞 Watch Trailer</button>
           </div>
         </div>
-        <!-- ✅ FIX: sandbox added — this is the MAIN FIX that stops page redirects -->
-        <!-- allow-popups-to-escape-sandbox allows fullscreen to work correctly -->
-        <!-- allow-top-navigation is intentionally OMITTED to block redirects -->
+        <!-- ✅ FIX: allow-popups added — required for video embed servers to initialize player -->
+        <!-- allow-top-navigation intentionally omitted to block page redirects -->
         <iframe id="mplayer"
           allowfullscreen
-          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock allow-popups-to-escape-sandbox"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock allow-popups allow-popups-to-escape-sandbox"
           allow="autoplay;fullscreen;picture-in-picture;encrypted-media;accelerometer;gyroscope"
           referrerpolicy="no-referrer"
           style="width:100%;aspect-ratio:16/9;display:block;border:none;">
