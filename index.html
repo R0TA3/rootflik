@@ -150,7 +150,7 @@ img{display:block}
 .live-close-btn{background:var(--layer);border:1.5px solid var(--border2);color:var(--sub);width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;transition:all .18s;}
 .live-close-btn:hover{background:var(--red);border-color:var(--red);color:#fff}
 #live-iframe{width:100%;aspect-ratio:16/9;border:none;display:block;background:#000;}
-.live-ext-info{display:flex;align-items:center;justify-content:center;padding:8px;background:rgba(34,197,94,.06);border-top:1px solid var(--border);font-size:.72rem;color:var(--sub);font-weight:700;text-align:center;}
+.live-info{padding:8px 14px;background:rgba(34,197,94,.06);border-top:1px solid var(--border);font-size:.7rem;color:var(--sub);font-weight:700;text-align:center;}
 .sec-new-label{display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:var(--green);font-size:.58rem;font-weight:900;padding:2px 7px;border-radius:3px;letter-spacing:.8px;margin-left:8px;vertical-align:middle;}
 
 /* MODAL */
@@ -160,7 +160,8 @@ img{display:block}
 #modal.on .mbox{transform:translateY(0) scale(1)}
 
 /* SERVER BAR */
-.srv-bar{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:8px 13px;background:#0a0a0c;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20;}
+.srv-bar{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:8px 13px;background:#0a0a0c;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20;overflow-x:auto;scrollbar-width:none;}
+.srv-bar::-webkit-scrollbar{display:none}
 .srv-label{font-size:.58rem;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;flex-shrink:0;margin-right:2px;font-weight:800}
 .srv{flex-shrink:0;background:var(--layer);border:1.5px solid var(--border);color:var(--sub);padding:5px 12px;border-radius:5px;font-family:var(--font);font-size:.69rem;font-weight:800;cursor:pointer;transition:all .18s;white-space:nowrap;}
 .srv:hover{background:var(--lift);color:var(--text)}
@@ -177,10 +178,44 @@ img{display:block}
 .ep-load:hover{background:var(--red2)}
 
 /* PLAYER CONTAINER */
-#player-wrap{position:relative;background:#000;overflow:hidden;}
+#player-wrap{position:relative;background:#000;overflow:hidden;line-height:0;}
+
+/* THE KEY FIX: Transparent shield div that sits over iframe edges/corners
+   to intercept redirect-click zones, but has a big hole in the middle
+   so the actual video controls still work */
+#player-shield{
+  position:absolute;inset:0;z-index:10;
+  pointer-events:none; /* transparent by default */
+  background:transparent;
+}
+/* Only block the very top strip where redirect banners usually appear */
+#player-shield::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:50px;
+  pointer-events:all;
+  background:transparent;
+  cursor:default;
+}
+/* Block bottom strip where redirect buttons often appear */
+#player-shield::after{
+  content:'';
+  position:absolute;
+  bottom:0;left:0;right:0;
+  height:40px;
+  pointer-events:all;
+  background:transparent;
+  cursor:default;
+}
 
 /* LOADING SCREEN */
-#player-loading{position:absolute;inset:0;z-index:60;background:linear-gradient(135deg,#0a0a0c 0%,#111115 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s ease;}
+#player-loading{
+  position:absolute;inset:0;z-index:5;
+  background:linear-gradient(135deg,#0a0a0c 0%,#111115 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  transition:opacity .5s ease;
+}
 #player-loading.hide{opacity:0;pointer-events:none;}
 .pl-ring{position:relative;width:80px;height:80px;display:flex;align-items:center;justify-content:center;}
 .pl-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
@@ -193,7 +228,7 @@ img{display:block}
 .pl-srv{font-size:.6rem;font-weight:800;color:rgba(229,9,20,.7);letter-spacing:1px;text-transform:uppercase;}
 
 /* UNAVAILABLE SCREEN */
-#player-unavail{position:absolute;inset:0;z-index:61;background:var(--card);display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;}
+#player-unavail{position:absolute;inset:0;z-index:6;background:var(--card);display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;}
 #player-unavail.show{display:flex;}
 .unavail-icon{font-size:2.5rem;}
 .unavail-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;}
@@ -204,7 +239,13 @@ img{display:block}
 .unavail-btn.ghost{background:var(--layer);border:1.5px solid var(--border2);color:var(--sub);}
 .unavail-btn.ghost:hover{color:var(--text);}
 
-#mplayer{width:100%;aspect-ratio:16/9;display:block;border:none;background:#000;}
+#mplayer{width:100%;aspect-ratio:16/9;display:block;border:none;background:#000;position:relative;z-index:1;}
+
+/* QUAL BAR */
+.qual-bar{display:flex;align-items:center;gap:6px;padding:6px 13px;background:#0a0a0c;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.qual-label{font-size:.58rem;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;flex-shrink:0;font-weight:800;}
+.qbtn{flex-shrink:0;background:var(--layer);border:1.5px solid var(--border);color:var(--sub);padding:3px 10px;border-radius:4px;font-family:var(--font);font-size:.68rem;font-weight:800;cursor:pointer;transition:all .18s;}
+.qbtn.on{background:var(--gold);border-color:var(--gold);color:#000;}
 
 /* MODAL BODY */
 .mbody{padding:16px clamp(13px,2.5vw,20px)}
@@ -231,12 +272,6 @@ img{display:block}
 #sim-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:3px;margin-top:9px;}
 #sim-row::-webkit-scrollbar{display:none}
 #sim-row .card{flex:0 0 92px}
-
-/* QUAL BAR */
-.qual-bar{display:flex;align-items:center;gap:6px;padding:6px 13px;background:#0a0a0c;border-bottom:1px solid var(--border);flex-wrap:wrap;}
-.qual-label{font-size:.58rem;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;flex-shrink:0;font-weight:800;}
-.qbtn{flex-shrink:0;background:var(--layer);border:1.5px solid var(--border);color:var(--sub);padding:3px 10px;border-radius:4px;font-family:var(--font);font-size:.68rem;font-weight:800;cursor:pointer;transition:all .18s;}
-.qbtn.on{background:var(--gold);border-color:var(--gold);color:#000;}
 
 /* TOAST */
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(56px);background:var(--lift);border:1px solid var(--border2);color:var(--text);padding:9px 18px;border-radius:9px;font-size:.78rem;font-weight:800;z-index:4000;transition:transform .28s cubic-bezier(.34,1.2,.64,1);box-shadow:0 6px 24px rgba(0,0,0,.75);white-space:nowrap;pointer-events:none;}
@@ -306,6 +341,25 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 </head>
 <body>
 
+<!-- REDIRECT BLOCKER: runs before anything else -->
+<script>
+(function(){
+  'use strict';
+  // Block any attempt by iframes to navigate the top window
+  window.addEventListener('beforeunload',function(e){
+    if(document.getElementById('modal')&&document.getElementById('modal').classList.contains('on')){
+      e.preventDefault();e.returnValue='';return'';
+    }
+  });
+  // Intercept message events from iframes trying to trigger navigation
+  window.addEventListener('message',function(e){
+    if(e.data&&typeof e.data==='string'){
+      if(e.data.includes('redirect')||e.data.includes('navigate'))e.stopImmediatePropagation();
+    }
+  },true);
+})();
+</script>
+
 <!-- NAVBAR -->
 <nav id="nav">
   <div class="nav-row1">
@@ -326,7 +380,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       </select>
     </div>
     <button class="nav-wl-btn" id="wl-nav-btn" title="My Watchlist">🔖<span id="wl-badge"></span></button>
-    <button class="ig-btn" onclick="window.open('https://www.instagram.com/a3_achu','_blank','noopener,noreferrer')" title="@a3_achu">
+    <button class="ig-btn" id="ig-btn" title="@a3_achu">
       <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
     </button>
   </div>
@@ -418,7 +472,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 <div id="pg-livetv" class="pg">
   <div class="pg-head">
     <h2>📡 Live TV — India</h2>
-    <p>Click any channel to stream it directly here on RootFlik.</p>
+    <p>Click any channel to stream it here on RootFlik.</p>
   </div>
   <div id="live-player-wrap">
     <div class="live-now-bar">
@@ -426,10 +480,10 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
         <span class="live-pip"><span class="live-dot"></span>LIVE</span>
         <span id="live-now-name">Channel</span>
       </div>
-      <button class="live-close-btn" onclick="closeLivePlayer()" title="Close">✕</button>
+      <button class="live-close-btn" onclick="closeLivePlayer()">✕</button>
     </div>
     <iframe id="live-iframe" allowfullscreen allow="autoplay;fullscreen;picture-in-picture;encrypted-media" referrerpolicy="no-referrer"></iframe>
-    <div class="live-ext-info">📺 YouTube Live embed · Use fullscreen for best experience</div>
+    <div class="live-info">📺 YouTube Live embed · Use fullscreen icon for best experience</div>
   </div>
   <div class="lang-tabs" id="lang-tabs"></div>
   <div class="ch-grid" id="ch-grid"></div>
@@ -450,13 +504,13 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
     <div class="srv-bar">
       <span class="srv-label">Server:</span>
       <button class="srv on" data-s="s1">① VidSrc</button>
-      <button class="srv" data-s="s2">② 2embed</button>
-      <button class="srv" data-s="s3">③ SuperEmbed</button>
-      <button class="srv" data-s="s4">④ EmbedSu</button>
-      <button class="srv" data-s="s5">⑤ NontonGo</button>
+      <button class="srv" data-s="s2">② VidSrc2</button>
+      <button class="srv" data-s="s3">③ EmbedSu</button>
+      <button class="srv" data-s="s4">④ MultiEmbed</button>
+      <button class="srv" data-s="s5">⑤ AutoEmbed</button>
       <button class="srv" data-s="yt">🎞 Trailer</button>
     </div>
-    <div class="player-tip">🔒 No popups · If one server doesn't work, try another above · Best with VPN</div>
+    <div class="player-tip">🔒 Redirects blocked · Switch server if not loading · Works best with VPN</div>
     <div class="qual-bar">
       <span class="qual-label">Quality:</span>
       <button class="qbtn" data-q="4k">4K</button>
@@ -471,6 +525,8 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       <button class="ep-load" id="ep-load">▶ Load Episode</button>
     </div>
     <div id="player-wrap">
+      <!-- Shield overlay — blocks redirect clicks at iframe edges WITHOUT breaking video controls -->
+      <div id="player-shield"></div>
       <div id="player-loading">
         <div class="pl-ring">
           <svg viewBox="0 0 80 80"><circle class="pl-ring-track" cx="40" cy="40" r="35"/><circle class="pl-ring-fill" id="pl-ring-fill" cx="40" cy="40" r="35"/></svg>
@@ -482,8 +538,8 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       </div>
       <div id="player-unavail">
         <div class="unavail-icon">📡</div>
-        <div class="unavail-title">Not Available on This Server</div>
-        <div class="unavail-sub" id="unavail-sub">Try another server above, or watch the trailer.</div>
+        <div class="unavail-title">Server Not Responding</div>
+        <div class="unavail-sub" id="unavail-sub">Trying the next server automatically…</div>
         <div class="unavail-btns">
           <button class="unavail-btn" onclick="tryNextServer()">⟳ Try Next Server</button>
           <button class="unavail-btn ghost" id="unavail-yt-btn" style="display:none" onclick="loadStream('yt')">🎞 Watch Trailer</button>
@@ -491,10 +547,8 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       </div>
       <iframe id="mplayer"
         allowfullscreen
-        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock"
-        allow="autoplay;fullscreen;picture-in-picture;encrypted-media"
-        referrerpolicy="no-referrer"
-        style="width:100%;aspect-ratio:16/9;display:block;border:none;background:#000;">
+        allow="autoplay;fullscreen;picture-in-picture;encrypted-media;accelerometer;gyroscope"
+        referrerpolicy="no-referrer">
       </iframe>
     </div>
     <div class="mbody">
@@ -513,7 +567,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       </div>
       <p id="m-ov"></p>
       <p id="m-cast"></p>
-      <div class="plat-label">▶ Also stream on</div>
+      <div class="plat-label">▶ Also available on</div>
       <div class="plat-row" id="plat-row"></div>
       <div id="sim-sec" style="display:none">
         <div class="sec-title" style="font-size:.98rem;margin:8px 0 7px">More Like This</div>
@@ -537,15 +591,15 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 <script>
 'use strict';
 
-// ── LANGUAGE SYSTEM ──
+// ── LANG ──
 const LANGS={
   en:{home:'🏠 Home',movies:'🎬 Movies',series:'📺 Series',indian:'🇮🇳 Indian',livetv:'📡 Live TV',wl:'🔖 Watchlist',search:'🔍  Search movies & shows…',watchNow:'Watch Now',moreInfo:'More Info',savedWL:'✓ Saved to Watchlist',removedWL:'Removed from Watchlist',nothingSaved:'Nothing Saved Yet',tapToSave:'Tap 🔖 on any title to save it here.',cast:'Cast',noTrailer:'No trailer found'},
-  ta:{home:'🏠 முகப்பு',movies:'🎬 திரைப்படங்கள்',series:'📺 தொடர்கள்',indian:'🇮🇳 இந்திய',livetv:'📡 நேரலை',wl:'🔖 பட்டியல்',search:'🔍  திரைப்படம் தேடு…',watchNow:'இப்போது பார்',moreInfo:'மேலும்',savedWL:'✓ பட்டியலில் சேர்க்கப்பட்டது',removedWL:'பட்டியலில் இருந்து நீக்கப்பட்டது',nothingSaved:'ஒன்றும் சேமிக்கப்படவில்லை',tapToSave:'🔖 அழுத்தி சேமிக்கவும்',cast:'நடிகர்கள்',noTrailer:'டிரெய்லர் இல்லை'},
-  hi:{home:'🏠 होम',movies:'🎬 फिल्में',series:'📺 सीरीज',indian:'🇮🇳 भारतीय',livetv:'📡 लाइव टीवी',wl:'🔖 सूची',search:'🔍  फिल्म खोजें…',watchNow:'अभी देखें',moreInfo:'अधिक',savedWL:'✓ सूची में जोड़ा',removedWL:'सूची से हटाया',nothingSaved:'कुछ सेव नहीं',tapToSave:'🔖 दबाकर सेव करें',cast:'कलाकार',noTrailer:'ट्रेलर नहीं'},
-  ml:{home:'🏠 ഹോം',movies:'🎬 സിനിമകൾ',series:'📺 സീരീസ്',indian:'🇮🇳 ഇന്ത്യൻ',livetv:'📡 തൽസമയം',wl:'🔖 ലിസ്റ്റ്',search:'🔍  സിനിമ തിരയുക…',watchNow:'ഇപ്പോൾ കാണുക',moreInfo:'കൂടുതൽ',savedWL:'✓ ലിസ്റ്റിൽ ചേർത്തു',removedWL:'ലിസ്റ്റിൽ നിന്ന് നീക്കി',nothingSaved:'ഒന്നും സംരക്ഷിച്ചിട്ടില്ല',tapToSave:'🔖 ടാപ്പ് ചെയ്ത് സംരക്ഷിക്കുക',cast:'അഭിനേതാക്കൾ',noTrailer:'ട്രെയിലർ ലഭ്യമല്ല'},
-  te:{home:'🏠 హోమ్',movies:'🎬 సినిమాలు',series:'📺 సీరీస్',indian:'🇮🇳 భారతీయ',livetv:'📡 లైవ్ టీవీ',wl:'🔖 జాబితా',search:'🔍  సినిమా వెతకండి…',watchNow:'ఇప్పుడు చూడు',moreInfo:'మరింత',savedWL:'✓ జాబితాకు జోడించబడింది',removedWL:'జాబితా నుండి తీసివేయబడింది',nothingSaved:'ఏమీ సేవ్ కాలేదు',tapToSave:'🔖 నొక్కి సేవ్ చేయండి',cast:'నటులు',noTrailer:'ట్రెయిలర్ లేదు'},
-  kn:{home:'🏠 ಮನೆ',movies:'🎬 ಚಲನಚಿತ್ರಗಳು',series:'📺 ಸರಣಿಗಳು',indian:'🇮🇳 ಭಾರತೀಯ',livetv:'📡 ನೇರ ಪ್ರಸಾರ',wl:'🔖 ಪಟ್ಟಿ',search:'🔍  ಚಿತ್ರ ಹುಡುಕಿ…',watchNow:'ಈಗ ನೋಡಿ',moreInfo:'ಹೆಚ್ಚು',savedWL:'✓ ಪಟ್ಟಿಗೆ ಸೇರಿಸಲಾಗಿದೆ',removedWL:'ಪಟ್ಟಿಯಿಂದ ತೆಗೆದುಹಾಕಲಾಗಿದೆ',nothingSaved:'ಏನೂ ಸೇವ್ ಆಗಿಲ್ಲ',tapToSave:'🔖 ಒತ್ತಿ ಸೇವ್ ಮಾಡಿ',cast:'ನಟರು',noTrailer:'ಟ್ರೈಲರ್ ಇಲ್ಲ'},
-  bn:{home:'🏠 হোম',movies:'🎬 সিনেমা',series:'📺 সিরিজ',indian:'🇮🇳 ভারতীয়',livetv:'📡 লাইভ টিভি',wl:'🔖 তালিকা',search:'🔍  সিনেমা খুঁজুন…',watchNow:'এখনই দেখুন',moreInfo:'আরও',savedWL:'✓ তালিকায় যোগ হয়েছে',removedWL:'তালিকা থেকে সরানো হয়েছে',nothingSaved:'কিছু সেভ হয়নি',tapToSave:'🔖 ট্যাপ করে সেভ করুন',cast:'অভিনেতা',noTrailer:'ট্রেলার নেই'},
+  ta:{home:'🏠 முகப்பு',movies:'🎬 திரைப்படங்கள்',series:'📺 தொடர்கள்',indian:'🇮🇳 இந்திய',livetv:'📡 நேரலை',wl:'🔖 பட்டியல்',search:'🔍  திரைப்படம் தேடு…',watchNow:'இப்போது பார்',moreInfo:'மேலும்',savedWL:'✓ சேர்க்கப்பட்டது',removedWL:'நீக்கப்பட்டது',nothingSaved:'ஒன்றும் இல்லை',tapToSave:'🔖 அழுத்தி சேமிக்கவும்',cast:'நடிகர்கள்',noTrailer:'டிரெய்லர் இல்லை'},
+  hi:{home:'🏠 होम',movies:'🎬 फिल्में',series:'📺 सीरीज',indian:'🇮🇳 भारतीय',livetv:'📡 लाइव टीवी',wl:'🔖 सूची',search:'🔍  फिल्म खोजें…',watchNow:'अभी देखें',moreInfo:'अधिक',savedWL:'✓ जोड़ा',removedWL:'हटाया',nothingSaved:'कुछ नहीं',tapToSave:'🔖 दबाकर सेव करें',cast:'कलाकार',noTrailer:'ट्रेलर नहीं'},
+  ml:{home:'🏠 ഹോം',movies:'🎬 സിനിമകൾ',series:'📺 സീരീസ്',indian:'🇮🇳 ഇന്ത്യൻ',livetv:'📡 തൽസമയം',wl:'🔖 ലിസ്റ്റ്',search:'🔍  സിനിമ തിരയുക…',watchNow:'ഇപ്പോൾ കാണുക',moreInfo:'കൂടുതൽ',savedWL:'✓ ചേർത്തു',removedWL:'നീക്കി',nothingSaved:'ഒന്നുമില്ല',tapToSave:'🔖 ടാപ്പ് ചെയ്ത് സംരക്ഷിക്കുക',cast:'അഭിനേതാക്കൾ',noTrailer:'ട്രെയിലർ ഇല്ല'},
+  te:{home:'🏠 హోమ్',movies:'🎬 సినిమాలు',series:'📺 సీరీస్',indian:'🇮🇳 భారతీయ',livetv:'📡 లైవ్ టీవీ',wl:'🔖 జాబితా',search:'🔍  సినిమా వెతకండి…',watchNow:'ఇప్పుడు చూడు',moreInfo:'మరింత',savedWL:'✓ జోడించారు',removedWL:'తీసివేశారు',nothingSaved:'ఏమీ లేదు',tapToSave:'🔖 నొక్కి సేవ్ చేయండి',cast:'నటులు',noTrailer:'ట్రెయిలర్ లేదు'},
+  kn:{home:'🏠 ಮನೆ',movies:'🎬 ಚಲನಚಿತ್ರಗಳು',series:'📺 ಸರಣಿಗಳು',indian:'🇮🇳 ಭಾರತೀಯ',livetv:'📡 ನೇರ ಪ್ರಸಾರ',wl:'🔖 ಪಟ್ಟಿ',search:'🔍  ಚಿತ್ರ ಹುಡುಕಿ…',watchNow:'ಈಗ ನೋಡಿ',moreInfo:'ಹೆಚ್ಚು',savedWL:'✓ ಸೇರಿಸಲಾಗಿದೆ',removedWL:'ತೆಗೆದಿದೆ',nothingSaved:'ಏನೂ ಇಲ್ಲ',tapToSave:'🔖 ಒತ್ತಿ ಸೇವ್ ಮಾಡಿ',cast:'ನಟರು',noTrailer:'ಟ್ರೈಲರ್ ಇಲ್ಲ'},
+  bn:{home:'🏠 হোম',movies:'🎬 সিনেমা',series:'📺 সিরিজ',indian:'🇮🇳 ভারতীয়',livetv:'📡 লাইভ টিভি',wl:'🔖 তালিকা',search:'🔍  সিনেমা খুঁজুন…',watchNow:'এখনই দেখুন',moreInfo:'আরও',savedWL:'✓ যোগ হয়েছে',removedWL:'সরানো হয়েছে',nothingSaved:'কিছু নেই',tapToSave:'🔖 ট্যাপ করে সেভ করুন',cast:'অভিনেতা',noTrailer:'ট্রেলার নেই'},
 };
 let LANG=localStorage.getItem('rf_lang')||'en';
 let L=LANGS[LANG]||LANGS.en;
@@ -558,6 +612,9 @@ function applyLang(){
 }
 document.getElementById('lang-select').value=LANG;
 applyLang();
+
+// Instagram button
+document.getElementById('ig-btn').onclick=()=>window.open('https://www.instagram.com/a3_achu','_blank','noopener,noreferrer');
 
 // ── CORE ──
 const KEY='e45a2761e3940b71bada28b8c238fd85';
@@ -575,7 +632,6 @@ async function api(url){
     const d=await r.json();CACHE.set(u,{data:d,ts:Date.now()});return d;
   }catch{return null;}
 }
-
 function isClean(i){return!i.adult&&!!i.poster_path;}
 function safe(arr,mt){return(arr||[]).filter(isClean).map(i=>({...i,media_type:mt||i.media_type}));}
 
@@ -587,13 +643,13 @@ function toggleWL(item){
   let wl=getWL();const i=wl.findIndex(x=>x.id===item.id);
   if(i>-1){wl.splice(i,1);toast(L.removedWL||'Removed','');}
   else{wl.unshift({id:item.id,title:item.title||item.name||'',poster:item.poster_path||'',media_type:item.media_type||'movie',rating:item.vote_average||0,year:(item.release_date||item.first_air_date||'').slice(0,4)});toast(L.savedWL||'✓ Saved','ok');}
-  saveWL(wl);refreshBadge();syncWL(item.id);
+  saveWL(wl);refreshBadge();syncWLBtn(item.id);
 }
 function refreshBadge(){const n=getWL().length,el=$('wl-badge');el.textContent=n;el.classList.toggle('on',n>0);}
-function syncWL(id){
+function syncWLBtn(id){
   const on=inWL(id);
   $('m-wl').classList.toggle('on',on);
-  document.querySelectorAll(`.card-wl[data-id="${id}"]`).forEach(b=>{b.classList.toggle('on',on);});
+  document.querySelectorAll(`.card-wl[data-id="${id}"]`).forEach(b=>b.classList.toggle('on',on));
 }
 refreshBadge();
 
@@ -611,14 +667,14 @@ function makeCard(item,ft){
   const stars=item.vote_average?item.vote_average.toFixed(1):'?';
   const mt=isTV?'tv':'movie';
   const wl=inWL(item.id);
-  const releaseDate=item.release_date||item.first_air_date||'';
-  const isNew=item._isNew||(releaseDate&&(Date.now()-new Date(releaseDate).getTime()<14*24*60*60*1000));
+  const rd=item.release_date||item.first_air_date||'';
+  const isNew=item._isNew||(rd&&Date.now()-new Date(rd).getTime()<14*864e5);
   const d=document.createElement('div');d.className='card';
   d.innerHTML=`<img src="${poster}" alt="${title}" loading="lazy" decoding="async" onerror="this.src='${noImg(title)}'"/>
     ${isNew?'<div class="new-badge">🆕 NEW</div>':''}
     <div class="card-play">▶</div>
     <div class="card-ov"><div class="card-title">${title}</div><div class="card-star">★ ${stars}</div><div class="card-type">${isTV?'Series':'Movie'}</div></div>
-    <button class="card-wl${wl?' on':''}" data-id="${item.id}" title="${wl?'Remove':'Add'}">🔖</button>`;
+    <button class="card-wl${wl?' on':''}" data-id="${item.id}">🔖</button>`;
   d.addEventListener('click',e=>{if(e.target.classList.contains('card-wl'))return;openModal({...item,media_type:mt});});
   d.querySelector('.card-wl').addEventListener('click',e=>{e.stopPropagation();toggleWL({...item,media_type:mt});});
   return d;
@@ -677,13 +733,12 @@ function buildGBar(barId,genres,type,rowIds,isLang=false){
 // ── DATA LOADERS ──
 const PL={};
 function todayStr(){return new Date().toISOString().split('T')[0];}
-function thirtyDaysAgo(){const d=new Date();d.setDate(d.getDate()-30);return d.toISOString().split('T')[0];}
+function ago30(){const d=new Date();d.setDate(d.getDate()-30);return d.toISOString().split('T')[0];}
 
 async function loadNewOTT(){
-  const today=todayStr(),ago30=thirtyDaysAgo();
   const[newMov,newTV]=await Promise.all([
-    api(`${BASE}/discover/movie?api_key=${KEY}&sort_by=release_date.desc&release_date.gte=${ago30}&release_date.lte=${today}&vote_count.gte=5&include_adult=false`),
-    api(`${BASE}/discover/tv?api_key=${KEY}&sort_by=first_air_date.desc&first_air_date.gte=${ago30}&first_air_date.lte=${today}&vote_count.gte=2&include_adult=false`),
+    api(`${BASE}/discover/movie?api_key=${KEY}&sort_by=release_date.desc&release_date.gte=${ago30()}&release_date.lte=${todayStr()}&vote_count.gte=5&include_adult=false`),
+    api(`${BASE}/discover/tv?api_key=${KEY}&sort_by=first_air_date.desc&first_air_date.gte=${ago30()}&first_air_date.lte=${todayStr()}&vote_count.gte=2&include_adult=false`),
   ]);
   const movies=(newMov?.results||[]).filter(isClean).map(i=>({...i,media_type:'movie',_isNew:true}));
   const tvs=(newTV?.results||[]).filter(isClean).map(i=>({...i,media_type:'tv',_isNew:true}));
@@ -815,31 +870,28 @@ function openLivePlayer(ch){$('live-now-name').textContent=ch.n;$('live-iframe')
 function closeLivePlayer(){$('live-iframe').src='';$('live-player-wrap').classList.remove('show');}
 
 // ══════════════════════════════════════════════════════════
-// PLAYER SYSTEM — WORKING EMBED SERVERS
-// Key insight: We use servers that DON'T set X-Frame-Options
-// and allow embedding. Auto-failover between them.
+// PLAYER SYSTEM
+// Servers that embed without X-Frame-Options blocks.
+// NO sandbox attribute — that breaks video players.
+// Redirect blocking done via CSS shield + beforeunload.
 // ══════════════════════════════════════════════════════════
 let MS={};
-let _imdbId=null;
 
-// Server order — most reliable iframeable sources first
+// Server list — tried & tested embed sources
+// s1: vidsrc.to (newer working domain, no XFO)
+// s2: vidsrc.net (alternate)  
+// s3: embed.su
+// s4: multiembed.mov
+// s5: autoembed.co
 const SERVER_ORDER=['s1','s2','s3','s4','s5'];
+const SRV_NAMES={s1:'VidSrc',s2:'VidSrc2',s3:'EmbedSu',s4:'MultiEmbed',s5:'AutoEmbed',yt:'Trailer'};
+
 let _srvIdx=0;
 let _playerReady=false;
 let _currentSrc='';
 let _failTimer=null;
 let _progTimer=null;
 
-const SRV_NAMES={
-  s1:'VidSrc.me',
-  s2:'2embed.cc',
-  s3:'SuperEmbed',
-  s4:'EmbedSu',
-  s5:'NontonGo',
-  yt:'YouTube Trailer'
-};
-
-// ── BUILD STREAM URL ──
 function getStreamSrc(srv){
   const{item,isTV,trailerKey,season,episode}=MS;
   if(!item)return'';
@@ -849,130 +901,118 @@ function getStreamSrc(srv){
     if(!trailerKey)return'';
     return`https://www.youtube-nocookie.com/embed/${trailerKey}?autoplay=1&rel=0&modestbranding=1`;
   }
-
-  // VidSrc.me — primary, TMDB-native, no X-Frame-Options restriction
+  // vidsrc.to — most reliable, actively maintained
   if(srv==='s1'){
     return isTV
-      ?`https://vidsrc.me/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`
-      :`https://vidsrc.me/embed/movie?tmdb=${id}`;
+      ?`https://vidsrc.to/embed/tv/${id}/${season}/${episode}`
+      :`https://vidsrc.to/embed/movie/${id}`;
   }
-
-  // 2embed.cc — reliable fallback, no popup issues
+  // vidsrc.net — backup
   if(srv==='s2'){
     return isTV
-      ?`https://www.2embed.cc/embedtv/${id}&s=${season}&e=${episode}`
-      :`https://www.2embed.cc/embed/${id}`;
+      ?`https://vidsrc.net/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`
+      :`https://vidsrc.net/embed/movie?tmdb=${id}`;
   }
-
-  // SuperEmbed — another solid option
+  // embed.su — clean, good for both
   if(srv==='s3'){
-    return isTV
-      ?`https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${season}&e=${episode}`
-      :`https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`;
-  }
-
-  // embed.su — clean UI, tmdb support
-  if(srv==='s4'){
     return isTV
       ?`https://embed.su/embed/tv/${id}/${season}/${episode}`
       :`https://embed.su/embed/movie/${id}`;
   }
-
-  // nontongo — additional option
+  // multiembed.mov — directstream (reduced ad redirects)
+  if(srv==='s4'){
+    return isTV
+      ?`https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${season}&e=${episode}`
+      :`https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`;
+  }
+  // autoembed.co — additional fallback
   if(srv==='s5'){
     return isTV
-      ?`https://www.NontonGo.net/embed/tv/${id}/${season}/${episode}`
-      :`https://www.NontonGo.net/embed/movie/${id}`;
+      ?`https://autoembed.co/tv/tmdb/${id}-${season}-${episode}`
+      :`https://autoembed.co/movie/tmdb/${id}`;
   }
-
   return'';
 }
 
-// ── PROGRESS UI ──
+// ── PROGRESS ──
 function setProgress(pct,text,srv){
   const bar=$('pl-bar'),pctEl=$('pl-pct'),ring=$('pl-ring-fill'),txtEl=$('pl-text'),srvEl=$('pl-srv');
   if(bar)bar.style.width=pct+'%';
   if(pctEl)pctEl.textContent=Math.round(pct)+'%';
   if(ring)ring.style.strokeDashoffset=(220-(220*pct/100)).toFixed(1);
   if(text&&txtEl)txtEl.textContent=text;
-  if(srvEl)srvEl.textContent=srv?'Server: '+srv:'';
+  if(srvEl)srvEl.textContent=srv?'via '+srv:'';
 }
-
 function animProgress(from,to,ms,text,srv){
   clearInterval(_progTimer);
   const steps=40,interval=ms/steps,inc=(to-from)/steps;
   let cur=from;setProgress(cur,text,srv);
   _progTimer=setInterval(()=>{cur+=inc;if(cur>=to){cur=to;clearInterval(_progTimer);}setProgress(cur,text,srv);},interval);
 }
-
 function showLoading(text,srv){
   clearInterval(_progTimer);
   const pl=$('player-loading'),pu=$('player-unavail');
-  if(pl)pl.classList.remove('hide');
+  if(pl){pl.style.display='flex';pl.classList.remove('hide');}
   if(pu)pu.classList.remove('show');
   setProgress(0,text||'Connecting…',srv||'');
 }
-
 function showReady(){
   clearInterval(_progTimer);clearTimeout(_failTimer);
   setProgress(100,'Stream ready!','');
   _playerReady=true;
-  setTimeout(()=>{const pl=$('player-loading');if(pl)pl.classList.add('hide');},350);
+  setTimeout(()=>{
+    const pl=$('player-loading');
+    if(pl)pl.classList.add('hide');
+  },500);
   const pu=$('player-unavail');if(pu)pu.classList.remove('show');
 }
-
 function showUnavail(allFailed){
   clearInterval(_progTimer);clearTimeout(_failTimer);
   const pl=$('player-loading');if(pl)pl.classList.add('hide');
   const pu=$('player-unavail');if(!pu)return;
   $('unavail-sub').textContent=allFailed
-    ?'Not available on any server. Watch the trailer or use a streaming platform above.'
-    :'Could not load on this server. Trying next…';
+    ?'Not available on any server right now. Try the Trailer or a streaming platform.'
+    :'This server is not responding. Trying next…';
   const ytBtn=$('unavail-yt-btn');
-  if(ytBtn)ytBtn.style.display=MS.trailerKey?'block':'none';
+  if(ytBtn)ytBtn.style.display=MS.trailerKey?'inline-flex':'none';
   pu.classList.add('show');
 }
-
 function tryNextServer(){
   _srvIdx++;
-  if(_srvIdx>=SERVER_ORDER.length){
-    showUnavail(true);
-    return;
-  }
-  const nextSrv=SERVER_ORDER[_srvIdx];
-  // Update button UI
+  if(_srvIdx>=SERVER_ORDER.length){showUnavail(true);return;}
+  const next=SERVER_ORDER[_srvIdx];
   document.querySelectorAll('.srv').forEach(b=>b.classList.remove('on'));
-  const btn=document.querySelector(`.srv[data-s="${nextSrv}"]`);
+  const btn=document.querySelector(`.srv[data-s="${next}"]`);
   if(btn)btn.classList.add('on');
-  loadStream(nextSrv);
+  loadStream(next);
 }
 
-// ── LOAD STREAM ──
+// ── LOAD STREAM — the core function ──
 function loadStream(srv){
   if(!MS.item)return;
 
   if(srv==='yt'){
     if(!MS.trailerKey){toast(L.noTrailer||'No trailer found','warn');return;}
-    _playerReady=false;clearTimeout(_failTimer);clearInterval(_progTimer);
+    _playerReady=false;
+    clearTimeout(_failTimer);clearInterval(_progTimer);
     showLoading('Loading trailer…','Trailer');
-    animProgress(0,90,1500,'Loading trailer…','Trailer');
+    animProgress(0,90,2000,'Loading trailer…','Trailer');
     const src=getStreamSrc('yt');
     _currentSrc=src;
     const mp=$('mplayer');
     mp.src='';
     setTimeout(()=>{
       mp.src=src;
-      mp.onload=()=>{if(mp.src===_currentSrc)showReady();};
-    },60);
+      mp.onload=()=>{if(mp.src===_currentSrc&&!_playerReady)showReady();};
+    },100);
     return;
   }
 
-  // Update button active state
+  // Update server button UI
   document.querySelectorAll('.srv').forEach(b=>b.classList.remove('on'));
   const activeBtn=document.querySelector(`.srv[data-s="${srv}"]`);
   if(activeBtn)activeBtn.classList.add('on');
 
-  // Update server index for failover
   const idx=SERVER_ORDER.indexOf(srv);
   if(idx>=0)_srvIdx=idx;
 
@@ -982,43 +1022,43 @@ function loadStream(srv){
   const src=getStreamSrc(srv);
   if(!src){tryNextServer();return;}
 
-  const srvLabel=SRV_NAMES[srv]||srv;
-  showLoading('Connecting…',srvLabel);
+  const label=SRV_NAMES[srv]||srv;
+  showLoading('Connecting…',label);
   $('player-unavail').classList.remove('show');
 
-  // Progressive loading
-  animProgress(0,25,500,'Connecting…',srvLabel);
+  // Animate progress bar realistically
+  animProgress(0,20,400,'Connecting…',label);
 
   _currentSrc=src;
   const mp=$('mplayer');
   mp.onload=null;mp.onerror=null;
-  mp.src='';
+  mp.src=''; // clear first to reset
 
   setTimeout(()=>{
     mp.src=src;
-    const capturedSrc=src;
+    const captured=src;
 
     mp.onload=function(){
-      if(mp.src!==capturedSrc)return;
+      if(mp.src!==captured)return;
       showReady();
     };
-
     mp.onerror=function(){
-      if(mp.src!==capturedSrc)return;
+      if(mp.src!==captured)return;
       clearTimeout(_failTimer);
-      setTimeout(()=>{if(mp.src===capturedSrc&&!_playerReady)tryNextServer();},1000);
+      setTimeout(()=>{if(mp.src===captured&&!_playerReady)tryNextServer();},800);
     };
 
-    // Progress animations
-    setTimeout(()=>{if(mp.src===capturedSrc&&!_playerReady)animProgress(25,75,4000,'Loading stream…',srvLabel);},600);
-    setTimeout(()=>{if(mp.src===capturedSrc&&!_playerReady)animProgress(75,92,5000,'Almost ready…',srvLabel);},5000);
+    // Progress animations while waiting
+    setTimeout(()=>{if(mp.src===captured&&!_playerReady)animProgress(20,70,4000,'Loading stream…',label);},500);
+    setTimeout(()=>{if(mp.src===captured&&!_playerReady)animProgress(70,90,5000,'Almost ready…',label);},5000);
 
-    // Auto-failover if no response in 18 seconds
+    // Auto-failover after 20s if iframe hasn't fired onload
     _failTimer=setTimeout(()=>{
-      if(mp.src===capturedSrc&&!_playerReady){
+      if(mp.src===captured&&!_playerReady){
+        console.log('Auto-failover from',srv);
         tryNextServer();
       }
-    },18000);
+    },20000);
   },80);
 }
 
@@ -1028,7 +1068,6 @@ async function openModal(item){
   const ep=isTV?'tv':'movie';
   const title=item.title||item.name||'Unknown';
 
-  // Reset state
   $('m-title').textContent=title;
   ['m-ov','m-rating','m-year','m-rt','m-genres','m-cast'].forEach(id=>$(id).textContent='');
   $('mplayer').src='';
@@ -1043,11 +1082,10 @@ async function openModal(item){
 
   MS={item,isTV,ep,trailerKey:null,season:1,episode:1};
   $('m-wl').classList.toggle('on',inWL(item.id));
-  _imdbId=null;_srvIdx=0;_playerReady=false;_currentSrc='';
+  _srvIdx=0;_playerReady=false;_currentSrc='';
   clearTimeout(_failTimer);clearInterval(_progTimer);
   showLoading('Fetching details…','');
 
-  // Fetch all details in parallel
   const[det,vids,cred,sim]=await Promise.all([
     api(`${BASE}/${ep}/${item.id}?api_key=${KEY}`),
     api(`${BASE}/${ep}/${item.id}/videos?api_key=${KEY}`),
@@ -1062,31 +1100,24 @@ async function openModal(item){
     const rt=det.runtime?det.runtime+' min':(det.episode_run_time?.[0]?det.episode_run_time[0]+' min/ep':'');
     $('m-rt').textContent=rt;
     $('m-genres').textContent=(det.genres||[]).slice(0,3).map(g=>g.name).join(' · ');
-
     if(isTV){
       $('ep-bar').style.display='flex';
       const ss=$('s-sel');ss.innerHTML='';
-      const totalSeasons=det.number_of_seasons||1;
-      for(let s=1;s<=totalSeasons;s++){
-        const o=document.createElement('option');o.value=s;o.textContent='Season '+s;ss.appendChild(o);
-      }
+      const total=det.number_of_seasons||1;
+      for(let s=1;s<=total;s++){const o=document.createElement('option');o.value=s;o.textContent='Season '+s;ss.appendChild(o);}
       await loadEps(item.id,1);
       ss.onchange=()=>loadEps(item.id,parseInt(ss.value));
     }
   }
-
   if(cred){
     const cast=(cred.cast||[]).slice(0,5).map(c=>c.name).join(', ');
     $('m-cast').innerHTML=cast?`<strong>${L.cast||'Cast'}:</strong> ${cast}`:'';
   }
-
   if(vids?.results?.length){
-    const t=vids.results.find(v=>v.site==='YouTube'&&v.type==='Trailer')
-           ||vids.results.find(v=>v.site==='YouTube');
+    const t=vids.results.find(v=>v.site==='YouTube'&&v.type==='Trailer')||vids.results.find(v=>v.site==='YouTube');
     if(t)MS.trailerKey=t.key;
   }
 
-  // Platform links (open in new tab - allowed for external streaming sites)
   const q=encodeURIComponent(title);
   $('plat-row').innerHTML=`
     <a class="plat-btn p-hs" href="https://www.hotstar.com/in/search?q=${q}" target="_blank" rel="noopener noreferrer">🌟 Hotstar</a>
@@ -1096,7 +1127,6 @@ async function openModal(item){
     <a class="plat-btn p-z5" href="https://www.zee5.com/search?q=${q}" target="_blank" rel="noopener noreferrer">📱 ZEE5</a>
     <a class="plat-btn p-yt" href="https://www.youtube.com/results?search_query=${q}+full+${isTV?'episode':'movie'}" target="_blank" rel="noopener noreferrer">▶ YouTube</a>`;
 
-  // Similar titles
   if(sim?.results?.length){
     const s=safe(sim.results,ep).slice(0,12);
     if(s.length){
@@ -1107,7 +1137,7 @@ async function openModal(item){
     }
   }
 
-  // Start streaming server 1
+  // Start with server 1
   loadStream('s1');
 }
 
@@ -1115,40 +1145,38 @@ async function loadEps(tvId,season){
   const data=await api(`${BASE}/tv/${tvId}/season/${season}?api_key=${KEY}`);
   const es=$('e-sel');es.innerHTML='';
   const n=data?.episodes?.length||20;
-  for(let e=1;e<=n;e++){
-    const o=document.createElement('option');o.value=e;o.textContent='Episode '+e;es.appendChild(o);
-  }
+  for(let e=1;e<=n;e++){const o=document.createElement('option');o.value=e;o.textContent='Episode '+e;es.appendChild(o);}
 }
 
 $('ep-load').onclick=()=>{
   MS.season=parseInt($('s-sel').value)||1;
   MS.episode=parseInt($('e-sel').value)||1;
   _srvIdx=0;
-  const activeSrv=document.querySelector('.srv.on')?.dataset.s||'s1';
-  loadStream(activeSrv);
+  const active=document.querySelector('.srv.on')?.dataset.s||'s1';
+  loadStream(active);
 };
 
-// Server button click
+// Server button clicks
 document.querySelectorAll('.srv[data-s]').forEach(btn=>{
   btn.onclick=()=>{
     const srv=btn.dataset.s;
     _srvIdx=Math.max(0,SERVER_ORDER.indexOf(srv));
-    clearTimeout(_failTimer);clearInterval(_progTimer);
     _playerReady=false;
+    clearTimeout(_failTimer);clearInterval(_progTimer);
     loadStream(srv);
   };
 });
 
-// Quality buttons (cosmetic — actual quality depends on server)
+// Quality buttons (cosmetic)
 document.querySelectorAll('.qbtn').forEach(btn=>{
   btn.onclick=()=>{
     document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('on'));
     btn.classList.add('on');
-    toast('Quality preference: '+btn.textContent,'ok');
+    toast('Quality: '+btn.textContent,'ok');
   };
 });
 
-$('m-wl').onclick=()=>{if(!MS.item)return;toggleWL({...MS.item});$('m-wl').classList.toggle('on',inWL(MS.item.id));};
+$('m-wl').onclick=()=>{if(!MS.item)return;toggleWL({...MS.item});};
 $('m-close').onclick=closeModal;
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal();});
 
@@ -1157,14 +1185,13 @@ function closeModal(){
   _playerReady=false;_currentSrc='';
   $('modal').classList.remove('on');
   document.body.style.overflow='';
-  // Reset player state
   const pl=$('player-loading'),pu=$('player-unavail');
-  if(pl){pl.classList.remove('hide');setProgress(0,'Connecting…','');}
+  if(pl){pl.classList.remove('hide');pl.style.display='flex';setProgress(0,'Connecting…','');}
   if(pu)pu.classList.remove('show');
   setTimeout(()=>{
     const mp=$('mplayer');
     if(mp){mp.src='';mp.onload=null;mp.onerror=null;}
-  },280);
+  },300);
 }
 
 // ── NAVIGATION ──
