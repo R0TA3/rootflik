@@ -21,7 +21,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
 a{text-decoration:none;color:inherit}
-button{font-family:var(--font)}
+button{font-family:var(--font);-webkit-tap-highlight-color:transparent}
 img{display:block}
 
 /* NAV */
@@ -55,6 +55,9 @@ img{display:block}
 .tab{flex-shrink:0;background:none;border:none;color:var(--sub);cursor:pointer;font-family:var(--font);font-size:.76rem;font-weight:800;padding:5px 13px;border-radius:18px;transition:all .18s;white-space:nowrap;}
 .tab:hover{color:var(--text);background:var(--layer)}
 .tab.on{color:#fff;background:var(--red)}
+#lang-selector{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+#lang-select{background:var(--layer);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:.72rem;font-weight:800;padding:5px 10px;border-radius:18px;cursor:pointer;outline:none;-webkit-appearance:none;transition:border-color .2s;}
+#lang-select:focus{border-color:var(--red)}
 
 /* HERO */
 #hero{position:relative;height:88vh;min-height:500px;display:flex;align-items:flex-end;padding:0 clamp(14px,3.5vw,44px) clamp(32px,6vh,60px);overflow:hidden;margin-top:var(--nav);}
@@ -87,6 +90,7 @@ img{display:block}
 .section{padding:.9rem 0 .1rem}
 .sec-head{display:flex;align-items:center;padding:0 clamp(10px,2.5vw,28px);margin-bottom:.75rem;}
 .sec-title{font-family:'Bebas Neue',sans-serif;font-size:1.18rem;letter-spacing:2px;color:#fff;}
+.sec-new-label{display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:var(--green);font-size:.58rem;font-weight:900;padding:2px 7px;border-radius:3px;letter-spacing:.8px;margin-left:8px;vertical-align:middle;}
 .row-wrap{position:relative}
 .row{display:flex;gap:7px;overflow-x:auto;padding:4px clamp(10px,2.5vw,28px) 10px;scrollbar-width:none;}
 .row::-webkit-scrollbar{display:none}
@@ -108,10 +112,10 @@ img{display:block}
 .card:hover .card-play{transform:translate(-50%,-50%) scale(1)}
 .card-wl{position:absolute;top:6px;right:6px;background:rgba(9,9,11,.78);color:var(--sub);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;cursor:pointer;border:1.5px solid var(--border2);transition:all .18s;z-index:5;}
 .card-wl:hover,.card-wl.on{background:var(--red);border-color:var(--red);color:#fff}
+.new-badge{position:absolute;top:6px;left:6px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:.48rem;font-weight:900;padding:2px 6px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase;z-index:6;pointer-events:none;}
 .sk{background:linear-gradient(90deg,var(--layer) 25%,var(--lift) 50%,var(--layer) 75%);background-size:200%;animation:sk 1s infinite;border-radius:var(--rc)}
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .sk-c{flex:0 0 140px;height:210px}
-.new-badge{position:absolute;top:6px;left:6px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:.48rem;font-weight:900;padding:2px 6px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase;z-index:6;pointer-events:none;}
 
 /* PAGES */
 .pg{display:none}.pg.on{display:block}
@@ -135,8 +139,8 @@ img{display:block}
 .ltab{flex-shrink:0;background:var(--layer);border:1.5px solid var(--border);color:var(--sub);padding:5px 13px;border-radius:18px;font-family:var(--font);font-size:.71rem;font-weight:800;cursor:pointer;transition:all .18s;white-space:nowrap;}
 .ltab:hover,.ltab.on{background:var(--red);border-color:var(--red);color:#fff}
 .ch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:9px}
-.ch{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;cursor:pointer;transition:all .2s;width:100%;}
-.ch:hover{border-color:var(--red);background:var(--red-dim);transform:translateY(-2px)}
+.ch{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;cursor:pointer;transition:all .2s;width:100%;border:none;}
+.ch:hover{background:var(--red-dim);transform:translateY(-2px)}
 .ch-em{font-size:1.65rem}
 .ch-name{font-size:.68rem;font-weight:800;color:var(--text);line-height:1.3}
 .ch-lang{font-size:.58rem;color:var(--sub);font-weight:700}
@@ -151,101 +155,46 @@ img{display:block}
 .live-close-btn:hover{background:var(--red);border-color:var(--red);color:#fff}
 #live-iframe{width:100%;aspect-ratio:16/9;border:none;display:block;background:#000;}
 .live-info{padding:8px 14px;background:rgba(34,197,94,.06);border-top:1px solid var(--border);font-size:.7rem;color:var(--sub);font-weight:700;text-align:center;}
-.sec-new-label{display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:var(--green);font-size:.58rem;font-weight:900;padding:2px 7px;border-radius:3px;letter-spacing:.8px;margin-left:8px;vertical-align:middle;}
 
 /* MODAL */
 #modal{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;padding:8px;}
 #modal.on{opacity:1;pointer-events:all}
-.mbox{background:var(--card);border:1px solid var(--border2);border-radius:14px;overflow:hidden;width:100%;max-width:920px;max-height:94vh;overflow-y:auto;transform:translateY(18px) scale(.97);transition:transform .28s cubic-bezier(.34,1.1,.64,1);box-shadow:0 28px 90px rgba(0,0,0,.97);}
+.mbox{background:var(--card);border:1px solid var(--border2);border-radius:14px;overflow:hidden;width:100%;max-width:860px;max-height:94vh;overflow-y:auto;transform:translateY(18px) scale(.97);transition:transform .28s cubic-bezier(.34,1.1,.64,1);box-shadow:0 28px 90px rgba(0,0,0,.97);}
 #modal.on .mbox{transform:translateY(0) scale(1)}
 
-/* SERVER BAR */
-.srv-bar{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:8px 13px;background:#0a0a0c;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20;overflow-x:auto;scrollbar-width:none;}
-.srv-bar::-webkit-scrollbar{display:none}
-.srv-label{font-size:.58rem;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;flex-shrink:0;margin-right:2px;font-weight:800}
-.srv{flex-shrink:0;background:var(--layer);border:1.5px solid var(--border);color:var(--sub);padding:5px 12px;border-radius:5px;font-family:var(--font);font-size:.69rem;font-weight:800;cursor:pointer;transition:all .18s;white-space:nowrap;}
-.srv:hover{background:var(--lift);color:var(--text)}
-.srv.on{background:var(--red);border-color:var(--red);color:#fff}
+/* MODAL HERO */
+.m-hero{position:relative;width:100%;aspect-ratio:16/7;background:var(--layer);overflow:hidden;}
+.m-hero img{width:100%;height:100%;object-fit:cover;display:block;}
+.m-hero-grad{position:absolute;inset:0;background:linear-gradient(0deg,var(--card) 0%,rgba(17,17,21,.4) 60%,transparent 100%);}
+.m-hero-badge{position:absolute;top:14px;left:14px;background:var(--red);color:#fff;font-size:.58rem;font-weight:900;padding:3px 8px;border-radius:4px;letter-spacing:1.5px;text-transform:uppercase;}
+.m-close-top{position:absolute;top:12px;right:12px;background:rgba(9,9,11,.7);border:1.5px solid var(--border2);color:var(--text);width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;transition:all .18s;backdrop-filter:blur(6px);}
+.m-close-top:hover{background:var(--red);border-color:var(--red)}
 
-/* PLAYER TIP */
-.player-tip{background:rgba(34,197,94,.07);border-bottom:1px solid rgba(34,197,94,.14);padding:6px 14px;font-size:.67rem;font-weight:800;color:rgba(34,197,94,.85);display:flex;align-items:center;gap:6px;}
+/* WHERE TO WATCH */
+.wtw-section{padding:18px clamp(13px,2.5vw,20px);border-bottom:1px solid var(--border);}
+.wtw-title{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.wtw-title span{font-size:.6rem;color:var(--green);font-family:var(--font);font-weight:900;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);padding:2px 7px;border-radius:3px;letter-spacing:1px;}
+.plat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
+.plat-card{display:flex;align-items:center;gap:9px;padding:10px 13px;border-radius:9px;font-family:var(--font);font-size:.74rem;font-weight:800;cursor:pointer;text-decoration:none;transition:all .18s;border:1.5px solid transparent;}
+.plat-card:hover{transform:translateY(-2px);filter:brightness(1.12)}
+.plat-icon{font-size:1.3rem;flex-shrink:0}
+.plat-info{min-width:0}
+.plat-name{font-size:.72rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plat-sub{font-size:.58rem;opacity:.7;margin-top:1px}
+.p-hs{background:linear-gradient(135deg,#1a1aff,#0d0dcc);color:#fff;border-color:rgba(26,26,255,.3)}
+.p-pv{background:linear-gradient(135deg,#00a8e0,#0077a0);color:#fff;border-color:rgba(0,168,224,.3)}
+.p-nf{background:linear-gradient(135deg,#e50914,#b00710);color:#fff;border-color:rgba(229,9,20,.3)}
+.p-jio{background:linear-gradient(135deg,#0a3d8f,#072d6b);color:#fff;border-color:rgba(10,61,143,.3)}
+.p-sl{background:linear-gradient(135deg,#003087,#002060);color:#fff;border-color:rgba(0,48,135,.3)}
+.p-z5{background:linear-gradient(135deg,#1a1a8f,#111160);color:#fff;border-color:rgba(26,26,143,.3)}
+.p-yt{background:linear-gradient(135deg,#f00,#c00);color:#fff;border-color:rgba(255,0,0,.3)}
+.p-ap{background:linear-gradient(135deg,#555,#333);color:#fff;border-color:rgba(85,85,85,.3)}
 
 /* EP BAR */
-.ep-bar{display:flex;align-items:center;gap:7px;padding:7px 13px;background:#0a0a0c;border-bottom:1px solid var(--border);flex-wrap:wrap;}
-.ep-bar select{background:var(--layer);border:1.5px solid var(--border);color:var(--text);padding:5px 10px;border-radius:5px;font-family:var(--font);font-size:.74rem;font-weight:700;cursor:pointer;outline:none;}
+.ep-bar{display:flex;align-items:center;gap:7px;padding:10px clamp(13px,2.5vw,20px);background:var(--layer);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.ep-bar select{background:var(--card);border:1.5px solid var(--border2);color:var(--text);padding:6px 12px;border-radius:6px;font-family:var(--font);font-size:.74rem;font-weight:700;cursor:pointer;outline:none;}
 .ep-bar select:focus{border-color:var(--red)}
-.ep-load{background:var(--red);border:none;color:#fff;padding:6px 15px;border-radius:5px;font-family:var(--font);font-size:.74rem;font-weight:800;cursor:pointer;transition:background .18s;}
-.ep-load:hover{background:var(--red2)}
-
-/* PLAYER CONTAINER */
-#player-wrap{position:relative;background:#000;overflow:hidden;line-height:0;}
-
-/* THE KEY FIX: Transparent shield div that sits over iframe edges/corners
-   to intercept redirect-click zones, but has a big hole in the middle
-   so the actual video controls still work */
-#player-shield{
-  position:absolute;inset:0;z-index:10;
-  pointer-events:none; /* transparent by default */
-  background:transparent;
-}
-/* Only block the very top strip where redirect banners usually appear */
-#player-shield::before{
-  content:'';
-  position:absolute;
-  top:0;left:0;right:0;
-  height:50px;
-  pointer-events:all;
-  background:transparent;
-  cursor:default;
-}
-/* Block bottom strip where redirect buttons often appear */
-#player-shield::after{
-  content:'';
-  position:absolute;
-  bottom:0;left:0;right:0;
-  height:40px;
-  pointer-events:all;
-  background:transparent;
-  cursor:default;
-}
-
-/* LOADING SCREEN */
-#player-loading{
-  position:absolute;inset:0;z-index:5;
-  background:linear-gradient(135deg,#0a0a0c 0%,#111115 100%);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
-  transition:opacity .5s ease;
-}
-#player-loading.hide{opacity:0;pointer-events:none;}
-.pl-ring{position:relative;width:80px;height:80px;display:flex;align-items:center;justify-content:center;}
-.pl-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
-.pl-ring-track{fill:none;stroke:rgba(255,255,255,.06);stroke-width:4}
-.pl-ring-fill{fill:none;stroke:var(--red);stroke-width:4;stroke-linecap:round;stroke-dasharray:220;stroke-dashoffset:220;transition:stroke-dashoffset .35s ease;filter:drop-shadow(0 0 6px rgba(229,9,20,.6));}
-.pl-pct{position:absolute;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#fff;letter-spacing:1px;}
-.pl-bar-wrap{width:min(280px,70vw);background:rgba(255,255,255,.08);border-radius:20px;height:5px;overflow:hidden;}
-.pl-bar{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--red),#ff6b35);width:0%;transition:width .35s ease;}
-.pl-text{font-size:.72rem;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.8px;}
-.pl-srv{font-size:.6rem;font-weight:800;color:rgba(229,9,20,.7);letter-spacing:1px;text-transform:uppercase;}
-
-/* UNAVAILABLE SCREEN */
-#player-unavail{position:absolute;inset:0;z-index:6;background:var(--card);display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;}
-#player-unavail.show{display:flex;}
-.unavail-icon{font-size:2.5rem;}
-.unavail-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;}
-.unavail-sub{font-size:.78rem;color:var(--sub);font-weight:600;max-width:300px;line-height:1.6;}
-.unavail-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
-.unavail-btn{background:var(--red);color:#fff;border:none;font-family:var(--font);font-size:.72rem;font-weight:800;padding:8px 16px;border-radius:var(--r);cursor:pointer;transition:background .18s;}
-.unavail-btn:hover{background:var(--red2);}
-.unavail-btn.ghost{background:var(--layer);border:1.5px solid var(--border2);color:var(--sub);}
-.unavail-btn.ghost:hover{color:var(--text);}
-
-#mplayer{width:100%;aspect-ratio:16/9;display:block;border:none;background:#000;position:relative;z-index:1;}
-
-/* QUAL BAR */
-.qual-bar{display:flex;align-items:center;gap:6px;padding:6px 13px;background:#0a0a0c;border-bottom:1px solid var(--border);flex-wrap:wrap;}
-.qual-label{font-size:.58rem;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;flex-shrink:0;font-weight:800;}
-.qbtn{flex-shrink:0;background:var(--layer);border:1.5px solid var(--border);color:var(--sub);padding:3px 10px;border-radius:4px;font-family:var(--font);font-size:.68rem;font-weight:800;cursor:pointer;transition:all .18s;}
-.qbtn.on{background:var(--gold);border-color:var(--gold);color:#000;}
+.ep-label{font-size:.7rem;font-weight:800;color:var(--sub);letter-spacing:.5px}
 
 /* MODAL BODY */
 .mbody{padding:16px clamp(13px,2.5vw,20px)}
@@ -262,16 +211,17 @@ img{display:block}
 #m-ov{font-size:.82rem;font-weight:600;color:rgba(241,241,243,.68);line-height:1.75;margin-bottom:11px}
 #m-cast{font-size:.74rem;color:var(--sub);margin-bottom:16px;line-height:1.6;font-weight:700}
 #m-cast strong{color:rgba(241,241,243,.6);font-weight:700}
-.plat-label{font-size:.58rem;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;font-weight:800}
-.plat-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px}
-.plat-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;font-family:var(--font);font-size:.7rem;font-weight:800;cursor:pointer;text-decoration:none;transition:opacity .18s;border:none;}
-.plat-btn:hover{opacity:.8}
-.p-hs{background:#1a1aff;color:#fff}.p-pv{background:#00a8e0;color:#fff}
-.p-sl{background:#003087;color:#fff}.p-jio{background:#0a3d8f;color:#fff}
-.p-z5{background:#1a1a8f;color:#fff}.p-yt{background:#f00;color:#fff}
 #sim-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:3px;margin-top:9px;}
 #sim-row::-webkit-scrollbar{display:none}
 #sim-row .card{flex:0 0 92px}
+
+/* TRAILER SECTION */
+.trailer-wrap{margin:0 clamp(13px,2.5vw,20px) 16px;border-radius:10px;overflow:hidden;aspect-ratio:16/9;background:#000;position:relative;}
+.trailer-wrap iframe{width:100%;height:100%;border:none;display:block;}
+.trailer-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--layer);cursor:pointer;border:1.5px dashed var(--border2);border-radius:10px;transition:background .2s;}
+.trailer-placeholder:hover{background:var(--lift)}
+.tp-icon{font-size:2.5rem}
+.tp-text{font-size:.8rem;font-weight:800;color:var(--sub)}
 
 /* TOAST */
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(56px);background:var(--lift);border:1px solid var(--border2);color:var(--text);padding:9px 18px;border-radius:9px;font-size:.78rem;font-weight:800;z-index:4000;transition:transform .28s cubic-bezier(.34,1.2,.64,1);box-shadow:0 6px 24px rgba(0,0,0,.75);white-space:nowrap;pointer-events:none;}
@@ -284,11 +234,6 @@ footer{border-top:1px solid var(--border);padding:20px clamp(10px,2.5vw,28px);ma
 footer p{font-size:.68rem;color:var(--sub);font-weight:700}
 footer .logo{font-size:1.5rem;cursor:default;filter:none}
 
-/* LANGUAGE SELECTOR */
-#lang-selector{display:flex;align-items:center;gap:6px;flex-shrink:0;}
-#lang-select{background:var(--layer);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:.72rem;font-weight:800;padding:5px 10px;border-radius:18px;cursor:pointer;outline:none;-webkit-appearance:none;transition:border-color .2s;}
-#lang-select:focus{border-color:var(--red)}
-
 /* RESPONSIVE */
 @media(max-width:768px){
   :root{--nav:98px}
@@ -296,10 +241,15 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   .logo{font-size:1.55rem}
   .srch-wrap{max-width:none}
   #hero{height:78vh;min-height:420px}
+  #hero-title{font-size:2rem}
+  #hero-ov{-webkit-line-clamp:2}
+  .btn{padding:9px 15px;font-size:.79rem}
   .card{flex:0 0 116px}.sk-c{flex:0 0 116px;height:174px}
   #sim-row .card{flex:0 0 84px}
   #modal{padding:0;align-items:flex-end}
   .mbox{border-radius:16px 16px 0 0;max-height:96vh}
+  .mbox::before{content:'';display:block;width:40px;height:4px;border-radius:2px;background:var(--border2);margin:10px auto 0;}
+  .m-hero{aspect-ratio:16/9}
   #m-title{font-size:1.38rem}
   .mbody{padding:13px}
   .arr{opacity:.42!important;width:26px;height:26px;font-size:.75rem}
@@ -320,12 +270,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   #hero{height:68vh;min-height:360px}
   #hero-title{font-size:1.75rem;line-height:1}
   #hero-ov{font-size:.75rem;-webkit-line-clamp:2}
-  .mbox::before{content:'';display:block;width:40px;height:4px;border-radius:2px;background:var(--border2);margin:10px auto 0;}
-  .srv-bar{flex-wrap:nowrap;overflow-x:auto;padding:8px 12px;gap:5px;}
-  .mbody{padding:14px 14px 24px}
-  #m-title{font-size:1.25rem}
-  .m-btn{width:38px;height:38px;font-size:.95rem}
-  #sim-row .card{flex:0 0 88px}
+  .plat-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
   #toast{bottom:72px}
   #pg-movies,#pg-series,#pg-indian{padding-top:calc(var(--nav) + 2px);padding-bottom:72px}
   #pg-livetv,#pg-wl{padding-top:calc(var(--nav) + 10px);padding-bottom:72px}
@@ -337,30 +282,14 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   .bnav-btn{min-width:44px;font-size:.5rem}
   #lang-selector{display:none}
 }
+@media(hover:none){
+  .card:active{transform:scale(.97)}
+  .arr{opacity:.4!important}
+}
 </style>
 </head>
 <body>
 
-<!-- REDIRECT BLOCKER: runs before anything else -->
-<script>
-(function(){
-  'use strict';
-  // Block any attempt by iframes to navigate the top window
-  window.addEventListener('beforeunload',function(e){
-    if(document.getElementById('modal')&&document.getElementById('modal').classList.contains('on')){
-      e.preventDefault();e.returnValue='';return'';
-    }
-  });
-  // Intercept message events from iframes trying to trigger navigation
-  window.addEventListener('message',function(e){
-    if(e.data&&typeof e.data==='string'){
-      if(e.data.includes('redirect')||e.data.includes('navigate'))e.stopImmediatePropagation();
-    }
-  },true);
-})();
-</script>
-
-<!-- NAVBAR -->
 <nav id="nav">
   <div class="nav-row1">
     <span class="logo" id="logo-btn">ROOTFLIK</span>
@@ -369,7 +298,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       <div id="srch-res"></div>
     </div>
     <div id="lang-selector">
-      <select id="lang-select" title="UI Language" onchange="changeLang(this.value)">
+      <select id="lang-select" title="Language" onchange="changeLang(this.value)">
         <option value="en">🌐 ENG</option>
         <option value="ta">தமிழ்</option>
         <option value="hi">हिंदी</option>
@@ -424,7 +353,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   <div class="section"><div class="sec-head"><span class="sec-title">💥 Action & Adventure</span></div><div class="row-wrap"><button class="arr l" onclick="sc('r-act',-1)">‹</button><div class="row" id="r-act"></div><button class="arr r" onclick="sc('r-act',1)">›</button></div></div>
   <div class="section"><div class="sec-head"><span class="sec-title">😂 Comedy</span></div><div class="row-wrap"><button class="arr l" onclick="sc('r-com',-1)">‹</button><div class="row" id="r-com"></div><button class="arr r" onclick="sc('r-com',1)">›</button></div></div>
   <div class="section"><div class="sec-head"><span class="sec-title">🧒 Family & Kids</span></div><div class="row-wrap"><button class="arr l" onclick="sc('r-fam',-1)">‹</button><div class="row" id="r-fam"></div><button class="arr r" onclick="sc('r-fam',1)">›</button></div></div>
-  <footer><span class="logo">ROOTFLIK</span><p>Powered by TMDB API · 🇮🇳 Made for India</p><p style="font-size:.62rem;color:var(--mute)">Not affiliated with any streaming platform.</p></footer>
+  <footer><span class="logo">ROOTFLIK</span><p>Powered by TMDB · 🇮🇳 Made for India</p><p style="font-size:.62rem;color:var(--mute)">Not affiliated with any streaming platform.</p></footer>
 </div>
 
 <!-- MOVIES -->
@@ -438,7 +367,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
   <div class="section"><div class="sec-head"><span class="sec-title">🔪 Thriller</span></div><div class="row-wrap"><button class="arr l" onclick="sc('r-mthr',-1)">‹</button><div class="row" id="r-mthr"></div><button class="arr r" onclick="sc('r-mthr',1)">›</button></div></div>
   <div class="section"><div class="sec-head"><span class="sec-title">🚀 Sci-Fi</span></div><div class="row-wrap"><button class="arr l" onclick="sc('r-msci',-1)">‹</button><div class="row" id="r-msci"></div><button class="arr r" onclick="sc('r-msci',1)">›</button></div></div>
   <div class="section"><div class="sec-head"><span class="sec-title">🌍 Documentary</span></div><div class="row-wrap"><button class="arr l" onclick="sc('r-mdoc',-1)">‹</button><div class="row" id="r-mdoc"></div><button class="arr r" onclick="sc('r-mdoc',1)">›</button></div></div>
-  <div class="section"><div class="sec-head"><span class="sec-title">🧒 Family & Kids</span></div><div class="row-wrap"><button class="arr l" onclick="sc('r-mfam',-1)">‹</button><div class="row" id="r-mfam"></div><button class="arr r" onclick="sc('r-mfam',1)">›</button></div></div>
+  <div class="section"><div class="sec-head"><span class="sec-title">🧒 Family</span></div><div class="row-wrap"><button class="arr l" onclick="sc('r-mfam',-1)">‹</button><div class="row" id="r-mfam"></div><button class="arr r" onclick="sc('r-mfam',1)">›</button></div></div>
 </div>
 
 <!-- SERIES -->
@@ -472,7 +401,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 <div id="pg-livetv" class="pg">
   <div class="pg-head">
     <h2>📡 Live TV — India</h2>
-    <p>Click any channel to stream it here on RootFlik.</p>
+    <p>Click any channel to stream it here on RootFlik via official YouTube embeds.</p>
   </div>
   <div id="live-player-wrap">
     <div class="live-now-bar">
@@ -483,7 +412,7 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       <button class="live-close-btn" onclick="closeLivePlayer()">✕</button>
     </div>
     <iframe id="live-iframe" allowfullscreen allow="autoplay;fullscreen;picture-in-picture;encrypted-media" referrerpolicy="no-referrer"></iframe>
-    <div class="live-info">📺 YouTube Live embed · Use fullscreen icon for best experience</div>
+    <div class="live-info">📺 Official YouTube Live · Use fullscreen for best experience</div>
   </div>
   <div class="lang-tabs" id="lang-tabs"></div>
   <div class="ch-grid" id="ch-grid"></div>
@@ -501,56 +430,37 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 <!-- MODAL -->
 <div id="modal">
   <div class="mbox">
-    <div class="srv-bar">
-      <span class="srv-label">Server:</span>
-      <button class="srv on" data-s="s1">① VidSrc</button>
-      <button class="srv" data-s="s2">② VidSrc2</button>
-      <button class="srv" data-s="s3">③ EmbedSu</button>
-      <button class="srv" data-s="s4">④ MultiEmbed</button>
-      <button class="srv" data-s="s5">⑤ AutoEmbed</button>
-      <button class="srv" data-s="yt">🎞 Trailer</button>
+    <!-- Hero backdrop -->
+    <div class="m-hero" id="m-hero">
+      <img id="m-backdrop" src="" alt="" onerror="this.parentElement.style.display='none'"/>
+      <div class="m-hero-grad"></div>
+      <div class="m-hero-badge" id="m-hero-badge">Movie</div>
+      <button class="m-close-top" id="m-close-top">✕</button>
     </div>
-    <div class="player-tip">🔒 Redirects blocked · Switch server if not loading · Works best with VPN</div>
-    <div class="qual-bar">
-      <span class="qual-label">Quality:</span>
-      <button class="qbtn" data-q="4k">4K</button>
-      <button class="qbtn" data-q="1080">1080p</button>
-      <button class="qbtn" data-q="720">720p</button>
-      <button class="qbtn" data-q="480">480p</button>
-      <button class="qbtn on" data-q="auto">Auto</button>
-    </div>
+
+    <!-- Episode selector (TV only) -->
     <div class="ep-bar" id="ep-bar" style="display:none">
+      <span class="ep-label">Season:</span>
       <select id="s-sel"></select>
+      <span class="ep-label">Episode:</span>
       <select id="e-sel"></select>
-      <button class="ep-load" id="ep-load">▶ Load Episode</button>
     </div>
-    <div id="player-wrap">
-      <!-- Shield overlay — blocks redirect clicks at iframe edges WITHOUT breaking video controls -->
-      <div id="player-shield"></div>
-      <div id="player-loading">
-        <div class="pl-ring">
-          <svg viewBox="0 0 80 80"><circle class="pl-ring-track" cx="40" cy="40" r="35"/><circle class="pl-ring-fill" id="pl-ring-fill" cx="40" cy="40" r="35"/></svg>
-          <span class="pl-pct" id="pl-pct">0%</span>
-        </div>
-        <div class="pl-bar-wrap"><div class="pl-bar" id="pl-bar"></div></div>
-        <div class="pl-text" id="pl-text">Connecting to server…</div>
-        <div class="pl-srv" id="pl-srv"></div>
-      </div>
-      <div id="player-unavail">
-        <div class="unavail-icon">📡</div>
-        <div class="unavail-title">Server Not Responding</div>
-        <div class="unavail-sub" id="unavail-sub">Trying the next server automatically…</div>
-        <div class="unavail-btns">
-          <button class="unavail-btn" onclick="tryNextServer()">⟳ Try Next Server</button>
-          <button class="unavail-btn ghost" id="unavail-yt-btn" style="display:none" onclick="loadStream('yt')">🎞 Watch Trailer</button>
-        </div>
-      </div>
-      <iframe id="mplayer"
-        allowfullscreen
-        allow="autoplay;fullscreen;picture-in-picture;encrypted-media;accelerometer;gyroscope"
-        referrerpolicy="no-referrer">
-      </iframe>
+
+    <!-- WHERE TO WATCH — the main feature -->
+    <div class="wtw-section">
+      <div class="wtw-title">▶ Where to Watch <span>OFFICIAL PLATFORMS</span></div>
+      <div class="plat-grid" id="plat-grid"></div>
     </div>
+
+    <!-- Trailer -->
+    <div class="trailer-wrap" id="trailer-wrap">
+      <div class="trailer-placeholder" id="trailer-placeholder" onclick="loadTrailer()">
+        <div class="tp-icon">🎬</div>
+        <div class="tp-text">▶ Play Official Trailer</div>
+      </div>
+    </div>
+
+    <!-- Info body -->
     <div class="mbody">
       <div class="m-header">
         <h2 id="m-title"></h2>
@@ -567,10 +477,8 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
       </div>
       <p id="m-ov"></p>
       <p id="m-cast"></p>
-      <div class="plat-label">▶ Also available on</div>
-      <div class="plat-row" id="plat-row"></div>
       <div id="sim-sec" style="display:none">
-        <div class="sec-title" style="font-size:.98rem;margin:8px 0 7px">More Like This</div>
+        <div class="sec-title" style="font-size:.98rem;margin:8px 0 7px;letter-spacing:2px">More Like This</div>
         <div id="sim-row"></div>
       </div>
     </div>
@@ -593,13 +501,13 @@ footer .logo{font-size:1.5rem;cursor:default;filter:none}
 
 // ── LANG ──
 const LANGS={
-  en:{home:'🏠 Home',movies:'🎬 Movies',series:'📺 Series',indian:'🇮🇳 Indian',livetv:'📡 Live TV',wl:'🔖 Watchlist',search:'🔍  Search movies & shows…',watchNow:'Watch Now',moreInfo:'More Info',savedWL:'✓ Saved to Watchlist',removedWL:'Removed from Watchlist',nothingSaved:'Nothing Saved Yet',tapToSave:'Tap 🔖 on any title to save it here.',cast:'Cast',noTrailer:'No trailer found'},
-  ta:{home:'🏠 முகப்பு',movies:'🎬 திரைப்படங்கள்',series:'📺 தொடர்கள்',indian:'🇮🇳 இந்திய',livetv:'📡 நேரலை',wl:'🔖 பட்டியல்',search:'🔍  திரைப்படம் தேடு…',watchNow:'இப்போது பார்',moreInfo:'மேலும்',savedWL:'✓ சேர்க்கப்பட்டது',removedWL:'நீக்கப்பட்டது',nothingSaved:'ஒன்றும் இல்லை',tapToSave:'🔖 அழுத்தி சேமிக்கவும்',cast:'நடிகர்கள்',noTrailer:'டிரெய்லர் இல்லை'},
-  hi:{home:'🏠 होम',movies:'🎬 फिल्में',series:'📺 सीरीज',indian:'🇮🇳 भारतीय',livetv:'📡 लाइव टीवी',wl:'🔖 सूची',search:'🔍  फिल्म खोजें…',watchNow:'अभी देखें',moreInfo:'अधिक',savedWL:'✓ जोड़ा',removedWL:'हटाया',nothingSaved:'कुछ नहीं',tapToSave:'🔖 दबाकर सेव करें',cast:'कलाकार',noTrailer:'ट्रेलर नहीं'},
-  ml:{home:'🏠 ഹോം',movies:'🎬 സിനിമകൾ',series:'📺 സീരീസ്',indian:'🇮🇳 ഇന്ത്യൻ',livetv:'📡 തൽസമയം',wl:'🔖 ലിസ്റ്റ്',search:'🔍  സിനിമ തിരയുക…',watchNow:'ഇപ്പോൾ കാണുക',moreInfo:'കൂടുതൽ',savedWL:'✓ ചേർത്തു',removedWL:'നീക്കി',nothingSaved:'ഒന്നുമില്ല',tapToSave:'🔖 ടാപ്പ് ചെയ്ത് സംരക്ഷിക്കുക',cast:'അഭിനേതാക്കൾ',noTrailer:'ട്രെയിലർ ഇല്ല'},
-  te:{home:'🏠 హోమ్',movies:'🎬 సినిమాలు',series:'📺 సీరీస్',indian:'🇮🇳 భారతీయ',livetv:'📡 లైవ్ టీవీ',wl:'🔖 జాబితా',search:'🔍  సినిమా వెతకండి…',watchNow:'ఇప్పుడు చూడు',moreInfo:'మరింత',savedWL:'✓ జోడించారు',removedWL:'తీసివేశారు',nothingSaved:'ఏమీ లేదు',tapToSave:'🔖 నొక్కి సేవ్ చేయండి',cast:'నటులు',noTrailer:'ట్రెయిలర్ లేదు'},
-  kn:{home:'🏠 ಮನೆ',movies:'🎬 ಚಲನಚಿತ್ರಗಳು',series:'📺 ಸರಣಿಗಳು',indian:'🇮🇳 ಭಾರತೀಯ',livetv:'📡 ನೇರ ಪ್ರಸಾರ',wl:'🔖 ಪಟ್ಟಿ',search:'🔍  ಚಿತ್ರ ಹುಡುಕಿ…',watchNow:'ಈಗ ನೋಡಿ',moreInfo:'ಹೆಚ್ಚು',savedWL:'✓ ಸೇರಿಸಲಾಗಿದೆ',removedWL:'ತೆಗೆದಿದೆ',nothingSaved:'ಏನೂ ಇಲ್ಲ',tapToSave:'🔖 ಒತ್ತಿ ಸೇವ್ ಮಾಡಿ',cast:'ನಟರು',noTrailer:'ಟ್ರೈಲರ್ ಇಲ್ಲ'},
-  bn:{home:'🏠 হোম',movies:'🎬 সিনেমা',series:'📺 সিরিজ',indian:'🇮🇳 ভারতীয়',livetv:'📡 লাইভ টিভি',wl:'🔖 তালিকা',search:'🔍  সিনেমা খুঁজুন…',watchNow:'এখনই দেখুন',moreInfo:'আরও',savedWL:'✓ যোগ হয়েছে',removedWL:'সরানো হয়েছে',nothingSaved:'কিছু নেই',tapToSave:'🔖 ট্যাপ করে সেভ করুন',cast:'অভিনেতা',noTrailer:'ট্রেলার নেই'},
+  en:{home:'🏠 Home',movies:'🎬 Movies',series:'📺 Series',indian:'🇮🇳 Indian',livetv:'📡 Live TV',wl:'🔖 Watchlist',search:'🔍  Search movies & shows…',watchNow:'Watch Now',moreInfo:'More Info',savedWL:'✓ Saved to Watchlist',removedWL:'Removed from Watchlist',nothingSaved:'Nothing Saved Yet',tapToSave:'Tap 🔖 on any title to save it here.',cast:'Cast'},
+  ta:{home:'🏠 முகப்பு',movies:'🎬 திரைப்படங்கள்',series:'📺 தொடர்கள்',indian:'🇮🇳 இந்திய',livetv:'📡 நேரலை',wl:'🔖 பட்டியல்',search:'🔍  தேடு…',watchNow:'இப்போது பார்',moreInfo:'மேலும்',savedWL:'✓ சேர்க்கப்பட்டது',removedWL:'நீக்கப்பட்டது',nothingSaved:'ஒன்றும் இல்லை',tapToSave:'🔖 அழுத்தி சேமிக்கவும்',cast:'நடிகர்கள்'},
+  hi:{home:'🏠 होम',movies:'🎬 फिल्में',series:'📺 सीरीज',indian:'🇮🇳 भारतीय',livetv:'📡 लाइव टीवी',wl:'🔖 सूची',search:'🔍  खोजें…',watchNow:'अभी देखें',moreInfo:'अधिक',savedWL:'✓ जोड़ा',removedWL:'हटाया',nothingSaved:'कुछ नहीं',tapToSave:'🔖 दबाकर सेव करें',cast:'कलाकार'},
+  ml:{home:'🏠 ഹോം',movies:'🎬 സിനിമകൾ',series:'📺 സീരീസ്',indian:'🇮🇳 ഇന്ത്യൻ',livetv:'📡 തൽസമയം',wl:'🔖 ലിസ്റ്റ്',search:'🔍  തിരയുക…',watchNow:'ഇപ്പോൾ കാണുക',moreInfo:'കൂടുതൽ',savedWL:'✓ ചേർത്തു',removedWL:'നീക്കി',nothingSaved:'ഒന്നുമില്ല',tapToSave:'🔖 ടാപ്പ് ചെയ്ത് സംരക്ഷിക്കുക',cast:'അഭിനേതാക്കൾ'},
+  te:{home:'🏠 హోమ్',movies:'🎬 సినిమాలు',series:'📺 సీరీస్',indian:'🇮🇳 భారతీయ',livetv:'📡 లైవ్ టీవీ',wl:'🔖 జాబితా',search:'🔍  వెతకండి…',watchNow:'ఇప్పుడు చూడు',moreInfo:'మరింత',savedWL:'✓ జోడించారు',removedWL:'తీసివేశారు',nothingSaved:'ఏమీ లేదు',tapToSave:'🔖 నొక్కి సేవ్ చేయండి',cast:'నటులు'},
+  kn:{home:'🏠 ಮನೆ',movies:'🎬 ಚಲನಚಿತ್ರಗಳು',series:'📺 ಸರಣಿಗಳು',indian:'🇮🇳 ಭಾರತೀಯ',livetv:'📡 ನೇರ ಪ್ರಸಾರ',wl:'🔖 ಪಟ್ಟಿ',search:'🔍  ಹುಡುಕಿ…',watchNow:'ಈಗ ನೋಡಿ',moreInfo:'ಹೆಚ್ಚು',savedWL:'✓ ಸೇರಿಸಲಾಗಿದೆ',removedWL:'ತೆಗೆದಿದೆ',nothingSaved:'ಏನೂ ಇಲ್ಲ',tapToSave:'🔖 ಒತ್ತಿ ಸೇವ್ ಮಾಡಿ',cast:'ನಟರು'},
+  bn:{home:'🏠 হোম',movies:'🎬 সিনেমা',series:'📺 সিরিজ',indian:'🇮🇳 ভারতীয়',livetv:'📡 লাইভ টিভি',wl:'🔖 তালিকা',search:'🔍  খুঁজুন…',watchNow:'এখনই দেখুন',moreInfo:'আরও',savedWL:'✓ যোগ হয়েছে',removedWL:'সরানো হয়েছে',nothingSaved:'কিছু নেই',tapToSave:'🔖 ট্যাপ করে সেভ করুন',cast:'অভিনেতা'},
 };
 let LANG=localStorage.getItem('rf_lang')||'en';
 let L=LANGS[LANG]||LANGS.en;
@@ -613,7 +521,6 @@ function applyLang(){
 document.getElementById('lang-select').value=LANG;
 applyLang();
 
-// Instagram button
 document.getElementById('ig-btn').onclick=()=>window.open('https://www.instagram.com/a3_achu','_blank','noopener,noreferrer');
 
 // ── CORE ──
@@ -743,8 +650,7 @@ async function loadNewOTT(){
   const movies=(newMov?.results||[]).filter(isClean).map(i=>({...i,media_type:'movie',_isNew:true}));
   const tvs=(newTV?.results||[]).filter(isClean).map(i=>({...i,media_type:'tv',_isNew:true}));
   const combined=[...movies,...tvs].sort((a,b)=>(b.release_date||b.first_air_date||'').localeCompare(a.release_date||a.first_air_date||'')).slice(0,30);
-  fillRow('r-new-ott',combined,null);
-  fillRow('r-new-tv',tvs.slice(0,20),'tv');
+  fillRow('r-new-ott',combined,null);fillRow('r-new-tv',tvs.slice(0,20),'tv');
 }
 
 async function loadHome(){
@@ -864,202 +770,106 @@ const CH=[
 ];
 const LCATS=['All','Tamil','Malayalam','Telugu','Kannada','Hindi','Bengali','Punjabi','News','Sports'];
 let liveDone=false;
-function buildLiveTV(){if(liveDone)return;liveDone=true;const tabs=$('lang-tabs');LCATS.forEach((cat,i)=>{const b=document.createElement('button');b.className='ltab'+(i===0?' on':'');b.textContent=cat;b.onclick=()=>{tabs.querySelectorAll('.ltab').forEach(x=>x.classList.remove('on'));b.classList.add('on');renderCh(cat);};tabs.appendChild(b);});renderCh('All');}
-function renderCh(cat){const g=$('ch-grid');g.innerHTML='';const list=cat==='All'?CH:CH.filter(c=>c.c===cat);const frag=document.createDocumentFragment();list.forEach(ch=>{const btn=document.createElement('button');btn.className='ch';btn.innerHTML=`<span class="ch-em">${ch.e}</span><span class="ch-name">${ch.n}</span><span class="ch-lang">${ch.l}</span><span class="live-pip"><span class="live-dot"></span>LIVE</span>`;btn.onclick=()=>openLivePlayer(ch);frag.appendChild(btn);});g.appendChild(frag);}
-function openLivePlayer(ch){$('live-now-name').textContent=ch.n;$('live-iframe').src=ch.embed;const wrap=$('live-player-wrap');wrap.classList.add('show');wrap.scrollIntoView({behavior:'smooth',block:'start'});}
+function buildLiveTV(){
+  if(liveDone)return;liveDone=true;
+  const tabs=$('lang-tabs');
+  LCATS.forEach((cat,i)=>{
+    const b=document.createElement('button');b.className='ltab'+(i===0?' on':'');b.textContent=cat;
+    b.onclick=()=>{tabs.querySelectorAll('.ltab').forEach(x=>x.classList.remove('on'));b.classList.add('on');renderCh(cat);};
+    tabs.appendChild(b);
+  });
+  renderCh('All');
+}
+function renderCh(cat){
+  const g=$('ch-grid');g.innerHTML='';
+  const list=cat==='All'?CH:CH.filter(c=>c.c===cat);
+  const frag=document.createDocumentFragment();
+  list.forEach(ch=>{
+    const btn=document.createElement('button');btn.className='ch';
+    btn.innerHTML=`<span class="ch-em">${ch.e}</span><span class="ch-name">${ch.n}</span><span class="ch-lang">${ch.l}</span><span class="live-pip"><span class="live-dot"></span>LIVE</span>`;
+    btn.onclick=()=>openLivePlayer(ch);frag.appendChild(btn);
+  });
+  g.appendChild(frag);
+}
+function openLivePlayer(ch){
+  $('live-now-name').textContent=ch.n;
+  $('live-iframe').src=ch.embed;
+  const wrap=$('live-player-wrap');wrap.classList.add('show');
+  wrap.scrollIntoView({behavior:'smooth',block:'start'});
+}
 function closeLivePlayer(){$('live-iframe').src='';$('live-player-wrap').classList.remove('show');}
 
-// ══════════════════════════════════════════════════════════
-// PLAYER SYSTEM
-// Servers that embed without X-Frame-Options blocks.
-// NO sandbox attribute — that breaks video players.
-// Redirect blocking done via CSS shield + beforeunload.
-// ══════════════════════════════════════════════════════════
+// ── MODAL STATE ──
 let MS={};
 
-// Server list — tried & tested embed sources
-// s1: vidsrc.to (newer working domain, no XFO)
-// s2: vidsrc.net (alternate)  
-// s3: embed.su
-// s4: multiembed.mov
-// s5: autoembed.co
-const SERVER_ORDER=['s1','s2','s3','s4','s5'];
-const SRV_NAMES={s1:'VidSrc',s2:'VidSrc2',s3:'EmbedSu',s4:'MultiEmbed',s5:'AutoEmbed',yt:'Trailer'};
+// ── BUILD WHERE TO WATCH PLATFORMS ──
+function buildPlatforms(title,isTV,det){
+  const q=encodeURIComponent(title);
+  const type=isTV?'tv-show':'movie';
 
-let _srvIdx=0;
-let _playerReady=false;
-let _currentSrc='';
-let _failTimer=null;
-let _progTimer=null;
+  // Smart platform detection based on region/language
+  const lang=(det?.original_language||'').toLowerCase();
+  const isIndian=['hi','ta','te','ml','kn','bn','mr','pa'].includes(lang);
 
-function getStreamSrc(srv){
-  const{item,isTV,trailerKey,season,episode}=MS;
-  if(!item)return'';
-  const id=item.id;
+  const platforms=[
+    {
+      cls:'p-hs',icon:'🌟',name:'Hotstar',sub:'Disney+ Hotstar',
+      url:`https://www.hotstar.com/in/search?q=${q}`,
+      hint:'Best for Indian + Hollywood'
+    },
+    {
+      cls:'p-pv',icon:'📦',name:'Prime Video',sub:'Amazon',
+      url:`https://www.primevideo.com/search/ref=atv_nb_sr?phrase=${q}`,
+      hint:'Wide library'
+    },
+    {
+      cls:'p-nf',icon:'🎬',name:'Netflix',sub:'netflix.com',
+      url:`https://www.netflix.com/search?q=${q}`,
+      hint:'Premium originals'
+    },
+    {
+      cls:'p-jio',icon:'🎞',name:'JioCinema',sub:'Free + Premium',
+      url:`https://www.jiocinema.com/search?q=${q}`,
+      hint:'Free with Jio'
+    },
+    {
+      cls:'p-sl',icon:'📺',name:'SonyLIV',sub:'Sony',
+      url:`https://www.sonyliv.com/search/${q}`,
+      hint:'Sports + originals'
+    },
+    {
+      cls:'p-z5',icon:'📱',name:'ZEE5',sub:'Zee Digital',
+      url:`https://www.zee5.com/search?q=${q}`,
+      hint:'Hindi content'
+    },
+    {
+      cls:'p-yt',icon:'▶',name:'YouTube',sub:'Free movies',
+      url:`https://www.youtube.com/results?search_query=${q}+full+${isTV?'episode':'movie'}`,
+      hint:'Free option'
+    },
+    {
+      cls:'p-ap',icon:'🍎',name:'Apple TV+',sub:'apple.com/tv',
+      url:`https://tv.apple.com/search?term=${q}`,
+      hint:'Premium originals'
+    },
+  ];
 
-  if(srv==='yt'){
-    if(!trailerKey)return'';
-    return`https://www.youtube-nocookie.com/embed/${trailerKey}?autoplay=1&rel=0&modestbranding=1`;
-  }
-  // vidsrc.to — most reliable, actively maintained
-  if(srv==='s1'){
-    return isTV
-      ?`https://vidsrc.to/embed/tv/${id}/${season}/${episode}`
-      :`https://vidsrc.to/embed/movie/${id}`;
-  }
-  // vidsrc.net — backup
-  if(srv==='s2'){
-    return isTV
-      ?`https://vidsrc.net/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`
-      :`https://vidsrc.net/embed/movie?tmdb=${id}`;
-  }
-  // embed.su — clean, good for both
-  if(srv==='s3'){
-    return isTV
-      ?`https://embed.su/embed/tv/${id}/${season}/${episode}`
-      :`https://embed.su/embed/movie/${id}`;
-  }
-  // multiembed.mov — directstream (reduced ad redirects)
-  if(srv==='s4'){
-    return isTV
-      ?`https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${season}&e=${episode}`
-      :`https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`;
-  }
-  // autoembed.co — additional fallback
-  if(srv==='s5'){
-    return isTV
-      ?`https://autoembed.co/tv/tmdb/${id}-${season}-${episode}`
-      :`https://autoembed.co/movie/tmdb/${id}`;
-  }
-  return'';
+  const grid=$('plat-grid');grid.innerHTML='';
+  platforms.forEach(p=>{
+    const a=document.createElement('a');
+    a.className=`plat-card ${p.cls}`;
+    a.href=p.url;a.target='_blank';a.rel='noopener noreferrer';
+    a.innerHTML=`<span class="plat-icon">${p.icon}</span><div class="plat-info"><div class="plat-name">${p.name}</div><div class="plat-sub">${p.hint}</div></div>`;
+    grid.appendChild(a);
+  });
 }
 
-// ── PROGRESS ──
-function setProgress(pct,text,srv){
-  const bar=$('pl-bar'),pctEl=$('pl-pct'),ring=$('pl-ring-fill'),txtEl=$('pl-text'),srvEl=$('pl-srv');
-  if(bar)bar.style.width=pct+'%';
-  if(pctEl)pctEl.textContent=Math.round(pct)+'%';
-  if(ring)ring.style.strokeDashoffset=(220-(220*pct/100)).toFixed(1);
-  if(text&&txtEl)txtEl.textContent=text;
-  if(srvEl)srvEl.textContent=srv?'via '+srv:'';
-}
-function animProgress(from,to,ms,text,srv){
-  clearInterval(_progTimer);
-  const steps=40,interval=ms/steps,inc=(to-from)/steps;
-  let cur=from;setProgress(cur,text,srv);
-  _progTimer=setInterval(()=>{cur+=inc;if(cur>=to){cur=to;clearInterval(_progTimer);}setProgress(cur,text,srv);},interval);
-}
-function showLoading(text,srv){
-  clearInterval(_progTimer);
-  const pl=$('player-loading'),pu=$('player-unavail');
-  if(pl){pl.style.display='flex';pl.classList.remove('hide');}
-  if(pu)pu.classList.remove('show');
-  setProgress(0,text||'Connecting…',srv||'');
-}
-function showReady(){
-  clearInterval(_progTimer);clearTimeout(_failTimer);
-  setProgress(100,'Stream ready!','');
-  _playerReady=true;
-  setTimeout(()=>{
-    const pl=$('player-loading');
-    if(pl)pl.classList.add('hide');
-  },500);
-  const pu=$('player-unavail');if(pu)pu.classList.remove('show');
-}
-function showUnavail(allFailed){
-  clearInterval(_progTimer);clearTimeout(_failTimer);
-  const pl=$('player-loading');if(pl)pl.classList.add('hide');
-  const pu=$('player-unavail');if(!pu)return;
-  $('unavail-sub').textContent=allFailed
-    ?'Not available on any server right now. Try the Trailer or a streaming platform.'
-    :'This server is not responding. Trying next…';
-  const ytBtn=$('unavail-yt-btn');
-  if(ytBtn)ytBtn.style.display=MS.trailerKey?'inline-flex':'none';
-  pu.classList.add('show');
-}
-function tryNextServer(){
-  _srvIdx++;
-  if(_srvIdx>=SERVER_ORDER.length){showUnavail(true);return;}
-  const next=SERVER_ORDER[_srvIdx];
-  document.querySelectorAll('.srv').forEach(b=>b.classList.remove('on'));
-  const btn=document.querySelector(`.srv[data-s="${next}"]`);
-  if(btn)btn.classList.add('on');
-  loadStream(next);
-}
-
-// ── LOAD STREAM — the core function ──
-function loadStream(srv){
-  if(!MS.item)return;
-
-  if(srv==='yt'){
-    if(!MS.trailerKey){toast(L.noTrailer||'No trailer found','warn');return;}
-    _playerReady=false;
-    clearTimeout(_failTimer);clearInterval(_progTimer);
-    showLoading('Loading trailer…','Trailer');
-    animProgress(0,90,2000,'Loading trailer…','Trailer');
-    const src=getStreamSrc('yt');
-    _currentSrc=src;
-    const mp=$('mplayer');
-    mp.src='';
-    setTimeout(()=>{
-      mp.src=src;
-      mp.onload=()=>{if(mp.src===_currentSrc&&!_playerReady)showReady();};
-    },100);
-    return;
-  }
-
-  // Update server button UI
-  document.querySelectorAll('.srv').forEach(b=>b.classList.remove('on'));
-  const activeBtn=document.querySelector(`.srv[data-s="${srv}"]`);
-  if(activeBtn)activeBtn.classList.add('on');
-
-  const idx=SERVER_ORDER.indexOf(srv);
-  if(idx>=0)_srvIdx=idx;
-
-  _playerReady=false;
-  clearTimeout(_failTimer);clearInterval(_progTimer);
-
-  const src=getStreamSrc(srv);
-  if(!src){tryNextServer();return;}
-
-  const label=SRV_NAMES[srv]||srv;
-  showLoading('Connecting…',label);
-  $('player-unavail').classList.remove('show');
-
-  // Animate progress bar realistically
-  animProgress(0,20,400,'Connecting…',label);
-
-  _currentSrc=src;
-  const mp=$('mplayer');
-  mp.onload=null;mp.onerror=null;
-  mp.src=''; // clear first to reset
-
-  setTimeout(()=>{
-    mp.src=src;
-    const captured=src;
-
-    mp.onload=function(){
-      if(mp.src!==captured)return;
-      showReady();
-    };
-    mp.onerror=function(){
-      if(mp.src!==captured)return;
-      clearTimeout(_failTimer);
-      setTimeout(()=>{if(mp.src===captured&&!_playerReady)tryNextServer();},800);
-    };
-
-    // Progress animations while waiting
-    setTimeout(()=>{if(mp.src===captured&&!_playerReady)animProgress(20,70,4000,'Loading stream…',label);},500);
-    setTimeout(()=>{if(mp.src===captured&&!_playerReady)animProgress(70,90,5000,'Almost ready…',label);},5000);
-
-    // Auto-failover after 20s if iframe hasn't fired onload
-    _failTimer=setTimeout(()=>{
-      if(mp.src===captured&&!_playerReady){
-        console.log('Auto-failover from',srv);
-        tryNextServer();
-      }
-    },20000);
-  },80);
+// ── TRAILER ──
+let _trailerKey=null;
+function loadTrailer(){
+  if(!_trailerKey){toast('No trailer available','warn');return;}
+  const wrap=$('trailer-wrap');
+  wrap.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${_trailerKey}?autoplay=1&rel=0&modestbranding=1" allowfullscreen allow="autoplay;fullscreen" referrerpolicy="no-referrer"></iframe>`;
 }
 
 // ── OPEN MODAL ──
@@ -1068,24 +878,28 @@ async function openModal(item){
   const ep=isTV?'tv':'movie';
   const title=item.title||item.name||'Unknown';
 
+  // Reset
   $('m-title').textContent=title;
   ['m-ov','m-rating','m-year','m-rt','m-genres','m-cast'].forEach(id=>$(id).textContent='');
-  $('mplayer').src='';
   $('sim-sec').style.display='none';
   $('sim-row').innerHTML='';
-  $('plat-row').innerHTML='';
   $('ep-bar').style.display='none';
-  document.querySelectorAll('.srv').forEach(b=>b.classList.remove('on'));
-  document.querySelector('.srv[data-s="s1"]').classList.add('on');
+  $('plat-grid').innerHTML='<div style="color:var(--sub);font-size:.75rem;font-weight:700;padding:4px;grid-column:1/-1">Loading platforms…</div>';
+  $('trailer-wrap').innerHTML=`<div class="trailer-placeholder" id="trailer-placeholder" onclick="loadTrailer()"><div class="tp-icon">🎬</div><div class="tp-text">▶ Play Official Trailer</div></div>`;
+  _trailerKey=null;
+  MS={item,isTV,ep,season:1,episode:1};
+
+  // Backdrop
+  const bd=$('m-backdrop');
+  if(item.backdrop_path){bd.src=IMG+'w780'+item.backdrop_path;$('m-hero').style.display='';}
+  else{$('m-hero').style.display='none';}
+  $('m-hero-badge').textContent=isTV?'Series':'Movie';
+
+  $('m-wl').classList.toggle('on',inWL(item.id));
   $('modal').classList.add('on');
   document.body.style.overflow='hidden';
 
-  MS={item,isTV,ep,trailerKey:null,season:1,episode:1};
-  $('m-wl').classList.toggle('on',inWL(item.id));
-  _srvIdx=0;_playerReady=false;_currentSrc='';
-  clearTimeout(_failTimer);clearInterval(_progTimer);
-  showLoading('Fetching details…','');
-
+  // Fetch data
   const[det,vids,cred,sim]=await Promise.all([
     api(`${BASE}/${ep}/${item.id}?api_key=${KEY}`),
     api(`${BASE}/${ep}/${item.id}/videos?api_key=${KEY}`),
@@ -1100,6 +914,7 @@ async function openModal(item){
     const rt=det.runtime?det.runtime+' min':(det.episode_run_time?.[0]?det.episode_run_time[0]+' min/ep':'');
     $('m-rt').textContent=rt;
     $('m-genres').textContent=(det.genres||[]).slice(0,3).map(g=>g.name).join(' · ');
+
     if(isTV){
       $('ep-bar').style.display='flex';
       const ss=$('s-sel');ss.innerHTML='';
@@ -1108,24 +923,25 @@ async function openModal(item){
       await loadEps(item.id,1);
       ss.onchange=()=>loadEps(item.id,parseInt(ss.value));
     }
+
+    buildPlatforms(title,isTV,det);
+  } else {
+    buildPlatforms(title,isTV,null);
   }
+
   if(cred){
     const cast=(cred.cast||[]).slice(0,5).map(c=>c.name).join(', ');
     $('m-cast').innerHTML=cast?`<strong>${L.cast||'Cast'}:</strong> ${cast}`:'';
   }
+
   if(vids?.results?.length){
     const t=vids.results.find(v=>v.site==='YouTube'&&v.type==='Trailer')||vids.results.find(v=>v.site==='YouTube');
-    if(t)MS.trailerKey=t.key;
+    if(t){
+      _trailerKey=t.key;
+      const ph=$('trailer-placeholder');
+      if(ph)ph.querySelector('.tp-text').textContent='▶ Play Official Trailer';
+    }
   }
-
-  const q=encodeURIComponent(title);
-  $('plat-row').innerHTML=`
-    <a class="plat-btn p-hs" href="https://www.hotstar.com/in/search?q=${q}" target="_blank" rel="noopener noreferrer">🌟 Hotstar</a>
-    <a class="plat-btn p-pv" href="https://www.primevideo.com/search/ref=atv_nb_sr?phrase=${q}" target="_blank" rel="noopener noreferrer">📦 Prime</a>
-    <a class="plat-btn p-sl" href="https://www.sonyliv.com/search/${q}" target="_blank" rel="noopener noreferrer">📺 SonyLIV</a>
-    <a class="plat-btn p-jio" href="https://www.jiocinema.com/search?q=${q}" target="_blank" rel="noopener noreferrer">🎬 JioCinema</a>
-    <a class="plat-btn p-z5" href="https://www.zee5.com/search?q=${q}" target="_blank" rel="noopener noreferrer">📱 ZEE5</a>
-    <a class="plat-btn p-yt" href="https://www.youtube.com/results?search_query=${q}+full+${isTV?'episode':'movie'}" target="_blank" rel="noopener noreferrer">▶ YouTube</a>`;
 
   if(sim?.results?.length){
     const s=safe(sim.results,ep).slice(0,12);
@@ -1136,9 +952,6 @@ async function openModal(item){
       $('sim-row').appendChild(f);
     }
   }
-
-  // Start with server 1
-  loadStream('s1');
 }
 
 async function loadEps(tvId,season){
@@ -1148,50 +961,17 @@ async function loadEps(tvId,season){
   for(let e=1;e<=n;e++){const o=document.createElement('option');o.value=e;o.textContent='Episode '+e;es.appendChild(o);}
 }
 
-$('ep-load').onclick=()=>{
-  MS.season=parseInt($('s-sel').value)||1;
-  MS.episode=parseInt($('e-sel').value)||1;
-  _srvIdx=0;
-  const active=document.querySelector('.srv.on')?.dataset.s||'s1';
-  loadStream(active);
-};
-
-// Server button clicks
-document.querySelectorAll('.srv[data-s]').forEach(btn=>{
-  btn.onclick=()=>{
-    const srv=btn.dataset.s;
-    _srvIdx=Math.max(0,SERVER_ORDER.indexOf(srv));
-    _playerReady=false;
-    clearTimeout(_failTimer);clearInterval(_progTimer);
-    loadStream(srv);
-  };
-});
-
-// Quality buttons (cosmetic)
-document.querySelectorAll('.qbtn').forEach(btn=>{
-  btn.onclick=()=>{
-    document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('on'));
-    btn.classList.add('on');
-    toast('Quality: '+btn.textContent,'ok');
-  };
-});
-
 $('m-wl').onclick=()=>{if(!MS.item)return;toggleWL({...MS.item});};
-$('m-close').onclick=closeModal;
+[$('m-close'),$('m-close-top')].forEach(b=>{if(b)b.onclick=closeModal;});
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal();});
 
 function closeModal(){
-  clearTimeout(_failTimer);clearInterval(_progTimer);
-  _playerReady=false;_currentSrc='';
   $('modal').classList.remove('on');
   document.body.style.overflow='';
-  const pl=$('player-loading'),pu=$('player-unavail');
-  if(pl){pl.classList.remove('hide');pl.style.display='flex';setProgress(0,'Connecting…','');}
-  if(pu)pu.classList.remove('show');
-  setTimeout(()=>{
-    const mp=$('mplayer');
-    if(mp){mp.src='';mp.onload=null;mp.onerror=null;}
-  },300);
+  // Stop trailer if playing
+  const tw=$('trailer-wrap');
+  if(tw)tw.innerHTML=`<div class="trailer-placeholder" id="trailer-placeholder" onclick="loadTrailer()"><div class="tp-icon">🎬</div><div class="tp-text">▶ Play Official Trailer</div></div>`;
+  _trailerKey=null;
 }
 
 // ── NAVIGATION ──
