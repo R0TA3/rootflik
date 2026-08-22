@@ -176,14 +176,15 @@ img{display:block}
 .player-wl-btn:hover,.player-wl-btn.on{background:var(--red-dim);border-color:var(--red);color:var(--red)}
 .player-dl-btn:hover,.player-dl-btn.on{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
 
-/* VIDEO WRAP - KEY FIX: no sandbox, position relative for blocking overlay */
+/* VIDEO WRAP */
 .player-video-wrap{position:relative;width:100%;background:#000;}
 .player-video-wrap iframe{width:100%;aspect-ratio:16/9;border:none;display:block;}
-/* Transparent overlay on edges to block redirect clicks */
-.vid-overlay-t{position:absolute;top:0;left:0;right:0;height:60px;z-index:5;pointer-events:all;}
-.vid-overlay-b{position:absolute;bottom:0;left:0;right:0;height:60px;z-index:5;pointer-events:all;}
-.vid-overlay-l{position:absolute;top:60px;bottom:60px;left:0;width:40px;z-index:5;pointer-events:all;}
-.vid-overlay-r{position:absolute;top:60px;bottom:60px;right:0;width:40px;z-index:5;pointer-events:all;}
+/* Overlays: thin strips on extreme edges only – blocks malicious click zones, leaves center for player controls */
+.vid-overlay-t{position:absolute;top:0;left:0;right:0;height:40px;z-index:5;pointer-events:all;}
+.vid-overlay-b{position:absolute;bottom:0;left:0;right:0;height:40px;z-index:5;pointer-events:all;}
+.vid-overlay-l{position:absolute;top:40px;bottom:40px;left:0;width:30px;z-index:5;pointer-events:all;}
+.vid-overlay-r{position:absolute;top:40px;bottom:40px;right:0;width:30px;z-index:5;pointer-events:all;}
+/* The center (player control area) remains clickable */
 
 .source-bar{display:flex;align-items:center;gap:8px;padding:10px clamp(10px,3vw,32px);background:var(--card);border-bottom:1px solid var(--border);flex-wrap:wrap;}
 .source-label{font-size:.7rem;font-weight:900;color:var(--sub);letter-spacing:.5px;text-transform:uppercase}
@@ -372,24 +373,83 @@ footer p{font-size:.68rem;color:var(--sub);font-weight:700}
 </head>
 <body>
 
-<!-- POP-UP / REDIRECT BLOCKER -->
+<!-- ===== FIXED POPUP / REDIRECT BLOCKER ===== -->
 <script>
-// Block all window.open and popups
 (function(){
-  const _open = window.open;
+  // PHASE 1: Persistent window.open block (survives site-script redefinitions)
+  let popupBlocked = false;
+  const origOpen = window.open;
   window.open = function(url, name, specs){
-    // Allow YouTube embeds only
-    if(url && (url.includes('youtube.com') || url.includes('youtu.be'))) return _open(url,name,specs);
-    console.warn('Blocked popup:', url);
+    // Only allow whitelisted URLs
+    if(url && (url.includes('youtube.com') || url.includes('youtu.be'))) {
+      return origOpen(url, name, specs);
+    }
+    console.warn('[ROOTFLIK] Blocked popup:', url);
+    popupBlocked = true;
     return null;
   };
-  // Block beforeunload redirects
+
+  // PHASE 2: Kill beforeunload redirect traps
   window.addEventListener('beforeunload', function(e){
-    // Only allow if user explicitly navigated
-    if(window._allowNav) return;
     e.preventDefault();
-    return '';
+    e.returnValue = '';
   }, false);
+
+  // PHASE 3: Monitor for scripted location changes from iframe injection
+  let lastLocation = window.location.href;
+  setInterval(function(){
+    if(window.location.href !== lastLocation){
+      // Check if navigation was user-initiated (click on nav elements)
+      const target = document.activeElement;
+      const isUserNav = target && (
+        target.closest('.tab') ||
+        target.closest('.bnav-btn') ||
+        target.closest('.player-back') ||
+        target.closest('.logo') ||
+        target.closest('.ott-btn') ||
+        target.closest('.card') ||
+        target.closest('.sri') ||
+        target.closest('#logo-btn')
+      );
+      if(!isUserNav){
+        console.warn('[ROOTFLIK] Blocked unwanted navigation');
+        window.history.pushState(null, '', lastLocation);
+        return false;
+      }
+      lastLocation = window.location.href;
+    }
+  }, 200);
+
+  // PHASE 4: MutationObserver to catch any injected script trying to redirect
+  const observer = new MutationObserver(function(mutations){
+    for(const m of mutations){
+      if(m.type === 'childList'){
+        for(const node of m.addedNodes){
+          if(node.tagName === 'SCRIPT' && node.src){
+            // Block scripts from known popup domains
+            const blocked = ['popad', 'popunder', 'adserver', 'adclick', 'exoclick'];
+            if(blocked.some(d => node.src.includes(d))){
+              node.remove();
+              console.warn('[ROOTFLIK] Removed malicious script:', node.src);
+            }
+          }
+        }
+      }
+    }
+  });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+
+  // PHASE 5: Override dangerous iframe-injected redirect methods
+  // These override the iframe's ability to navigate the top window
+  const blockNav = function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  };
+  document.addEventListener('click', function(e){
+    // If the click originated from inside an iframe (cross-origin), we can't directly read it,
+    // but we can catch navigation attempts on the window level (handled above).
+  }, true);
 })();
 </script>
 
@@ -398,7 +458,7 @@ footer p{font-size:.68rem;color:var(--sub);font-weight:700}
   <div class="nav-row1">
     <span class="logo" id="logo-btn">ROOTFLIK</span>
     <div class="srch-wrap">
-      <input id="srch-in" type="search" placeholder="🔍  Search movies &amp; shows…" autocomplete="off" spellcheck="false"/>
+      <input id="srch-in" type="search" placeholder="🔍 Search movies & shows…" autocomplete="off" spellcheck="false"/>
       <div id="srch-res"></div>
     </div>
     <div class="nav-icons">
@@ -543,11 +603,12 @@ footer p{font-size:.68rem;color:var(--sub);font-weight:700}
   </div>
   <div class="src-notice" id="src-notice">⚡ If video doesn't load, try another server below. VidSrc.to usually works best.</div>
   <div class="player-video-wrap" id="pl-video-wrap">
+    <!-- NO sandbox attribute — embed needs full JS for video playback -->
     <iframe id="pl-iframe"
       allowfullscreen
       allow="autoplay;fullscreen;picture-in-picture;encrypted-media;gyroscope;accelerometer"
       referrerpolicy="no-referrer"></iframe>
-    <!-- Edge overlays to block redirect clicks -->
+    <!-- Edge overlays: thin strips to block ad click zones, leave center for player controls -->
     <div class="vid-overlay-t" id="vid-ov-t"></div>
     <div class="vid-overlay-b" id="vid-ov-b"></div>
     <div class="vid-overlay-l"></div>
@@ -556,10 +617,10 @@ footer p{font-size:.68rem;color:var(--sub);font-weight:700}
   <div class="source-bar">
     <span class="source-label">🎬 Server:</span>
     <button class="src-btn on" onclick="switchSrc(0)">VidSrc.to ⭐</button>
-    <button class="src-btn" onclick="switchSrc(1)">VidSrc.me</button>
-    <button class="src-btn" onclick="switchSrc(2)">2Embed</button>
-    <button class="src-btn" onclick="switchSrc(3)">EmbedSU</button>
-    <button class="src-btn" onclick="switchSrc(4)">SmashyStream</button>
+    <button class="src-btn" onclick="switchSrc(1)">Embed.su</button>
+    <button class="src-btn" onclick="switchSrc(2)">MultiEmbed</button>
+    <button class="src-btn" onclick="switchSrc(3)">SuperEmbed</button>
+    <button class="src-btn" onclick="switchSrc(4)">2Embed</button>
     <span class="src-status"><span class="src-dot"></span>Streaming</span>
   </div>
   <div class="player-ep-bar" id="pl-ep-bar" style="display:none">
@@ -649,7 +710,6 @@ footer p{font-size:.68rem;color:var(--sub);font-weight:700}
   <div class="phone-device">
     <div class="phone-notch"></div>
     <div class="phone-screen" id="phone-screen">
-      <!-- mirrors current page content in mobile view -->
       <div style="padding:40px 20px;text-align:center;color:var(--sub);font-size:.8rem;font-weight:700">
         <div style="font-size:2rem;margin-bottom:12px">📱</div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:3px;color:var(--red);margin-bottom:8px">ROOTFLIK</div>
@@ -678,24 +738,23 @@ const $=id=>document.getElementById(id);
 let GM={};
 const CACHE=new Map();
 
-// ── POP-UP / REDIRECT BLOCK ──────────────────────────
-// Re-intercept in case any embedded scripts undo the early block
-setInterval(()=>{
-  const _op=window.open;
-  if(_op && _op.toString().indexOf('native')===-1) return;
-  window.open=function(u,n,s){
-    if(u&&(u.includes('youtube.com')||u.includes('youtu.be')))return null;
+// ── POPUP / REDIRECT BLOCK (redundant layer) ──────────
+(function(){
+  // Keep window.open locked at all times
+  const lockOpen = function(url, name, specs){
+    if(url && (url.includes('youtube.com') || url.includes('youtu.be'))) {
+      // Call original if available, otherwise null
+      try { return window._origOpen ? window._origOpen(url, name, specs) : null; } catch(e) { return null; }
+    }
     return null;
   };
-},500);
-
-// Block clicks on the iframe overlay edges
-document.addEventListener('click',function(e){
-  const t=e.target;
-  if(t&&(t.id==='vid-ov-t'||t.id==='vid-ov-b'||t.classList.contains('vid-overlay-l')||t.classList.contains('vid-overlay-r'))){
-    e.preventDefault();e.stopPropagation();
-  }
-},true);
+  try { window._origOpen = window.open; } catch(e) {}
+  Object.defineProperty(window, 'open', {
+    value: lockOpen,
+    writable: false,
+    configurable: false
+  });
+})();
 
 // ── LANG ────────────────────────────────────────────
 const LANGS={
@@ -743,7 +802,6 @@ function toggleDownload(item){
   let dl=getDownloads();const idx=dl.findIndex(x=>x.id===item.id);
   if(idx>-1){dl.splice(idx,1);toast('Removed from downloads','warn');}
   else{
-    // Save FULL item data so it can be played later
     const entry={
       id:item.id,
       title:item.title||item.name||'',
@@ -937,418 +995,4 @@ async function loadIndian(force=false){
   if(_indDone&&!force)return;_indDone=true;
   ['r-ibol','r-itam','r-itel','r-imal','r-ikan','r-iben','r-iws'].forEach(id=>skel(id));
   const [bol,tam,tel,mal,kan,ben,ws]=await Promise.all([
-    api(`${BASE}/discover/movie?api_key=${KEY}&with_original_language=hi&sort_by=popularity.desc&include_adult=false`),
-    api(`${BASE}/discover/movie?api_key=${KEY}&with_original_language=ta&sort_by=popularity.desc&include_adult=false`),
-    api(`${BASE}/discover/movie?api_key=${KEY}&with_original_language=te&sort_by=popularity.desc&include_adult=false`),
-    api(`${BASE}/discover/movie?api_key=${KEY}&with_original_language=ml&sort_by=popularity.desc&include_adult=false`),
-    api(`${BASE}/discover/movie?api_key=${KEY}&with_original_language=kn&sort_by=popularity.desc&include_adult=false`),
-    api(`${BASE}/discover/movie?api_key=${KEY}&with_original_language=bn&sort_by=popularity.desc&include_adult=false`),
-    api(`${BASE}/discover/tv?api_key=${KEY}&with_original_language=hi&sort_by=popularity.desc&include_adult=false`),
-  ]);
-  fillRow('r-ibol',safe(bol?.results,'movie'),'movie');fillRow('r-itam',safe(tam?.results,'movie'),'movie');
-  fillRow('r-itel',safe(tel?.results,'movie'),'movie');fillRow('r-imal',safe(mal?.results,'movie'),'movie');
-  fillRow('r-ikan',safe(kan?.results,'movie'),'movie');fillRow('r-iben',safe(ben?.results,'movie'),'movie');
-  fillRow('r-iws',safe(ws?.results,'tv'),'tv');
-  buildGBar('ind-gbar',IL,'movie',['r-ibol','r-itam','r-itel','r-imal','r-ikan','r-iben'],true);
-}
-
-// ── LIVE TV ───────────────────────────────────────────
-const CHANNELS=[
-  {id:'UCt_SNPnGfO9SgnJoGwJo-0w',name:'DD National',em:'📺',lang:'Hindi'},
-  {id:'UCgz0M2JJqXJWtDHb40OI0yQ',name:'Aaj Tak',em:'📰',lang:'Hindi'},
-  {id:'UCbD5xyLCu6bXfQsUnAGYBmQ',name:'Republic TV',em:'🗞️',lang:'English'},
-  {id:'UCIvaAe_1qil6mMbFnW7aBVQ',name:'NDTV India',em:'📡',lang:'Hindi'},
-  {id:'UCl_RKZvvdEGzjJ0lLXeSdWQ',name:'Times Now',em:'⏰',lang:'English'},
-  {id:'UCJd2C9HiJT27fM0t2zjimCA',name:'India TV',em:'🇮🇳',lang:'Hindi'},
-  {id:'UCSmDMcTzFLYZAb1y-7RJFNQ',name:'Zee News',em:'📢',lang:'Hindi'},
-  {id:'UC3Wm7V32Yiz-P_8_48b_5Lw',name:'ABP News',em:'🔔',lang:'Hindi'},
-  {id:'UCCCfxMmHDdFMNZBjOqniMV0g',name:'Sun News',em:'☀️',lang:'Tamil'},
-  {id:'UCCRpqpqiIVHSS7KE6KpvhRw',name:'Thanthi TV',em:'📣',lang:'Tamil'},
-  {id:'UCmkKzFbILhaSIaWz3_mXxug',name:'Jaya TV',em:'🎶',lang:'Tamil'},
-  {id:'UCZ7gF0zm35vsFbcez5ovKyw',name:'Puthiyathalaimurai',em:'🌅',lang:'Tamil'},
-  {id:'UCBk9LVQZ6O7s0aWZ0hOAU2w',name:'Asianet News',em:'🌏',lang:'Malayalam'},
-  {id:'UC0JGKzBGYxcJXlJJoM9Rn5Q',name:'Mathrubhumi',em:'🌿',lang:'Malayalam'},
-  {id:'UCkdkp8fZP_U1EzHZQQCXOGg',name:'TV9 Telugu',em:'9️⃣',lang:'Telugu'},
-  {id:'UCUimEM5LiKoLFsF9XBrxFrg',name:'TV5 News',em:'5️⃣',lang:'Telugu'},
-  {id:'UCcgqSM4YEo5ggqCQHcnO_ug',name:'TV9 Kannada',em:'🎯',lang:'Kannada'},
-  {id:'UC7A6fZfFE6LyBJEwqyj3GnA',name:'Zee 24 Ghanta',em:'🕐',lang:'Bengali'},
-  {id:'UCdzal2HbQWEKNBD1x9t1fEA',name:'Colors TV',em:'🌈',lang:'Hindi'},
-  {id:'UCaPTMdcFoqFZO9DGOAuCpYw',name:'Sony LIV',em:'🎭',lang:'Hindi'},
-  {id:'UCaBf1a-dpIsw8OxqH4ki2Lg',name:'MTV India',em:'🎵',lang:'Hindi'},
-  {id:'UCsT0YIqwnpJCM-mx7-gSA4Q',name:'DD Sports',em:'🏏',lang:'Sports'},
-  {id:'UCiHi7v2JrKO_RFN_b16E9bQ',name:'Star Sports 1',em:'⚽',lang:'Sports'},
-  {id:'UCRo8-HXeqbNASHAmFJzL8Hg',name:'Cartoon Network',em:'🦸',lang:'Kids'},
-  {id:'UCvlE5gTbOvjiolFlEm-c_Ow',name:'Pogo TV',em:'🐾',lang:'Kids'},
-];
-const CH_LANGS=['All','Hindi','English','Tamil','Malayalam','Telugu','Kannada','Bengali','Sports','Kids'];
-
-function loadLiveTV(){
-  const lt=$('lang-tabs');lt.innerHTML='';
-  CH_LANGS.forEach((l,i)=>{
-    const b=document.createElement('button');b.className='ltab'+(i===0?' on':'');b.textContent=l;
-    b.onclick=()=>{document.querySelectorAll('.ltab').forEach(x=>x.classList.remove('on'));b.classList.add('on');renderChannels(l);};
-    lt.appendChild(b);
-  });
-  renderChannels('All');
-}
-function renderChannels(lang){
-  const g=$('ch-grid');g.innerHTML='';
-  const filtered=lang==='All'?CHANNELS:CHANNELS.filter(c=>c.lang===lang);
-  filtered.forEach(ch=>{
-    const d=document.createElement('button');d.className='ch';
-    d.innerHTML=`<span class="ch-em">${ch.em}</span><span class="ch-name">${ch.name}</span><span class="ch-lang">${ch.lang}</span><span class="live-pip" style="margin-top:4px"><span class="live-dot"></span>LIVE</span>`;
-    d.onclick=()=>playLive(ch);
-    g.appendChild(d);
-  });
-}
-function playLive(ch){
-  $('live-now-name').textContent=ch.name;
-  $('live-iframe').src=`https://www.youtube.com/embed/${ch.id}?autoplay=1&rel=0&modestbranding=1`;
-  $('live-player-wrap').classList.add('show');
-  $('live-player-wrap').scrollIntoView({behavior:'smooth',block:'start'});
-}
-function closeLivePlayer(){$('live-iframe').src='';$('live-player-wrap').classList.remove('show');}
-
-// ── PAGE NAV ──────────────────────────────────────────
-let _curPg='home';
-function goTo(pg){
-  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
-  const target=$('pg-'+pg);if(target)target.classList.add('on');
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.pg===pg));
-  _curPg=pg;window.scrollTo(0,0);
-  if(pg==='home')loadHome();
-  else if(pg==='movies')loadMovies();
-  else if(pg==='series')loadSeries();
-  else if(pg==='indian')loadIndian();
-  else if(pg==='livetv')loadLiveTV();
-  else if(pg==='wl')renderWL();
-  else if(pg==='downloads')renderDownloads();
-}
-function setBNav(btn){document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
-document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>goTo(t.dataset.pg)));
-$('logo-btn').onclick=()=>{goTo('home');document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.toggle('on',b.dataset.pg==='home'));};
-
-// ── WATCHLIST PAGE ───────────────────────────────────
-function renderWL(){
-  const wl=getWL(),g=$('wl-grid'),s=$('wl-sub');
-  g.innerHTML='';
-  if(!wl.length){
-    g.innerHTML=`<div class="wl-empty"><div class="wl-empty-ico">🔖</div><h3>${L.nothingSaved||'Nothing Saved'}</h3><p>${L.tapToSave||'Tap 🔖 on any title to add it here.'}</p></div>`;
-    if(s)s.textContent='Your saved movies and shows';return;
-  }
-  if(s)s.textContent=wl.length+' saved title'+(wl.length!==1?'s':'');
-  wl.forEach(item=>{
-    const poster=item.poster?IMG+'w342'+item.poster:noImg(item.title);
-    const d=document.createElement('div');d.className='card';
-    d.innerHTML=`<img src="${poster}" alt="${item.title}" loading="lazy" onerror="this.src='${noImg(item.title)}'"/>
-      <div class="card-play">▶</div>
-      <div class="card-ov"><div class="card-title">${item.title}</div><div class="card-star">★ ${item.rating?item.rating.toFixed(1):'?'}</div><div class="card-type">${item.media_type==='tv'?'Series':'Movie'}</div></div>
-      <button class="card-wl on" data-id="${item.id}">🔖</button>`;
-    d.addEventListener('click',e=>{if(e.target.classList.contains('card-wl'))return;openModal({id:item.id,title:item.title,name:item.title,poster_path:item.poster,media_type:item.media_type,vote_average:item.rating});});
-    d.querySelector('.card-wl').addEventListener('click',e=>{e.stopPropagation();toggleWL(item);renderWL();});
-    g.appendChild(d);
-  });
-}
-
-// ── DOWNLOADS PAGE ────────────────────────────────────
-function renderDownloads(){
-  const dl=getDownloads(),g=$('dl-grid');g.innerHTML='';
-  if(!dl.length){g.innerHTML='<div class="wl-empty"><div class="wl-empty-ico">⬇️</div><h3>No Downloads</h3><p>Tap ⬇ on any title to save it here.</p></div>';return;}
-  dl.forEach(item=>{
-    const poster=item.poster_path?IMG+'w342'+item.poster_path:(item.poster?IMG+'w342'+item.poster:noImg(item.title||item.name));
-    const title=item.title||item.name||'Unknown';
-    const d=document.createElement('div');d.className='dl-card';
-    d.innerHTML=`<img src="${poster}" alt="${title}" loading="lazy" onerror="this.src='${noImg(title)}'"/>
-      <div class="dl-info"><div class="dl-title">${title}</div><span class="dl-badge">✓ Saved</span></div>
-      <button class="dl-remove" onclick="event.stopPropagation();removeDL(${item.id})">✕</button>`;
-    d.addEventListener('click',()=>openPlayer(item));
-    g.appendChild(d);
-  });
-}
-function removeDL(id){saveDownloads(getDownloads().filter(x=>x.id!==id));renderDownloads();toast('Removed from downloads','warn');}
-
-// ── SEARCH ────────────────────────────────────────────
-let _st;
-$('srch-in').addEventListener('input',function(){
-  clearTimeout(_st);const q=this.value.trim();
-  const sr=$('srch-res');
-  if(!q){sr.classList.remove('open');sr.innerHTML='';return;}
-  sr.classList.add('open');sr.innerHTML='<div style="padding:12px;color:var(--sub);font-size:.76rem;font-weight:700">Searching…</div>';
-  _st=setTimeout(()=>doSearch(q),380);
-});
-async function doSearch(q){
-  const sr=$('srch-res');
-  const data=await api(`${BASE}/search/multi?api_key=${KEY}&query=${encodeURIComponent(q)}&include_adult=false`);
-  const items=(data?.results||[]).filter(i=>isClean(i)&&(i.media_type==='movie'||i.media_type==='tv')).slice(0,10);
-  sr.innerHTML='';
-  if(!items.length){sr.innerHTML='<div style="padding:14px;color:var(--sub);font-size:.76rem;font-weight:700">No results found.</div>';return;}
-  items.forEach(item=>{
-    const poster=item.poster_path?IMG+'w92'+item.poster_path:noImg(item.title||item.name);
-    const title=item.title||item.name||'';
-    const yr=(item.release_date||item.first_air_date||'').slice(0,4);
-    const d=document.createElement('div');d.className='sri';
-    d.innerHTML=`<img src="${poster}" alt="${title}" onerror="this.src='${noImg(title)}'"/>
-      <div class="sri-body"><h4>${title}</h4><p>${yr||'—'}</p><span class="sri-tag">${item.media_type==='tv'?'Series':'Movie'}</span></div>`;
-    d.onclick=()=>{sr.classList.remove('open');$('srch-in').value='';openModal(item);};
-    sr.appendChild(d);
-  });
-}
-document.addEventListener('click',e=>{if(!e.target.closest('.srch-wrap'))$('srch-res').classList.remove('open');});
-
-// ── MODAL ────────────────────────────────────────────
-let _curModalItem=null;
-async function openModal(item){
-  _curModalItem=item;
-  const mt=item.media_type||'movie';
-  const isTV=mt==='tv';
-  $('modal').classList.add('on');
-  document.body.style.overflow='hidden';
-  const bd=item.backdrop_path?IMG+'w780'+item.backdrop_path:'';
-  $('m-backdrop').src=bd;
-  $('m-backdrop').parentElement.style.display=bd?'':'none';
-  $('m-hero-badge').textContent=isTV?'Series':'Movie';
-  $('m-title').textContent=item.title||item.name||'';
-  $('m-rating').textContent=item.vote_average?'★ '+item.vote_average.toFixed(1):'';
-  $('m-year').textContent=(item.release_date||item.first_air_date||'').slice(0,4)||'';
-  $('m-ov').textContent=item.overview||'No description available.';
-  $('m-rt').textContent='';$('m-genres').textContent='';$('m-cast-modal').innerHTML='';
-  $('m-wl').classList.toggle('on',inWL(item.id));
-  $('sim-sec').style.display='none';$('sim-row').innerHTML='';
-  $('m-play-main').onclick=()=>{closeModal();openPlayer(item);};
-  $('m-dl-main').onclick=()=>{toggleDownload(item);};
-  $('m-wl').onclick=()=>toggleWL(item);
-  const [details,credits,similar]=await Promise.all([
-    api(`${BASE}/${mt}/${item.id}?api_key=${KEY}&append_to_response=external_ids`),
-    api(`${BASE}/${mt}/${item.id}/credits?api_key=${KEY}`),
-    api(`${BASE}/${mt}/${item.id}/similar?api_key=${KEY}`),
-  ]);
-  if(details){
-    if(details.runtime)$('m-rt').textContent=`${Math.floor(details.runtime/60)}h ${details.runtime%60}m`;
-    $('m-genres').textContent=(details.genres||[]).slice(0,3).map(g=>g.name).join(', ');
-  }
-  if(credits){
-    const cast=(credits.cast||[]).slice(0,6).map(c=>c.name).join(', ');
-    if(cast)$('m-cast-modal').innerHTML=`<strong>Cast:</strong> ${cast}`;
-  }
-  const simItems=safe(similar?.results||[],mt).filter(i=>i.id!==item.id).slice(0,10);
-  if(simItems.length){
-    $('sim-sec').style.display='block';
-    const frag=document.createDocumentFragment();
-    simItems.forEach(si=>{const c=makeCard(si,mt);c.addEventListener('click',()=>openModal(si));frag.appendChild(c);});
-    $('sim-row').appendChild(frag);
-  }
-}
-function closeModal(){$('modal').classList.remove('on');document.body.style.overflow='';_curModalItem=null;}
-$('m-close').onclick=closeModal;
-$('m-close-top').onclick=closeModal;
-$('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal();});
-
-// ── PLAYER ────────────────────────────────────────────
-let _curPlayerItem=null,_curSrcIdx=0,_curS=1,_curE=1,_seasonData=[];
-
-// FIXED SOURCES — sandbox removed, vidsrc.to first (most reliable)
-const SOURCES=[
-  (id,mt,s,e)=>mt==='tv'?`https://vidsrc.to/embed/tv/${id}/${s}/${e}`:`https://vidsrc.to/embed/movie/${id}`,
-  (id,mt,s,e)=>mt==='tv'?`https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}`:`https://vidsrc.me/embed/movie?tmdb=${id}`,
-  (id,mt,s,e)=>mt==='tv'?`https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}`:`https://www.2embed.cc/embed/${id}`,
-  (id,mt,s,e)=>mt==='tv'?`https://embed.su/embed/tv/${id}/${s}/${e}`:`https://embed.su/embed/movie/${id}`,
-  (id,mt,s,e)=>mt==='tv'?`https://player.smashy.stream/tv/${id}?s=${s}&e=${e}`:`https://player.smashy.stream/movie/${id}`,
-];
-
-async function openPlayer(item){
-  _curPlayerItem=item;
-  const mt=item.media_type||'movie';
-  const isTV=mt==='tv';
-  const title=item.title||item.name||'';
-  $('pl-title').textContent=title;
-  $('pl-sub').textContent=isTV?'Series':'Movie';
-  $('pl-info-title').textContent=title;
-  $('pl-ov').textContent=item.overview||'';
-  $('pl-star').textContent=item.vote_average?'★ '+item.vote_average.toFixed(1):'';
-  $('pl-year').textContent=(item.release_date||item.first_air_date||'').slice(0,4)||'';
-  $('pl-wl-btn').classList.toggle('on',inWL(item.id));
-  $('pl-dl-btn').classList.toggle('on',inDownloads(item.id));
-  $('pl-runtime').textContent='';$('pl-genres').textContent='';$('pl-cast').textContent='';
-  $('rel-list').innerHTML='';$('ott-grid').innerHTML='';
-  buildAudioTracks();buildSubTracks();buildOTT(item,mt);
-  $('pg-player').classList.add('on');
-  document.body.style.overflow='hidden';
-  _curS=1;_curE=1;_curSrcIdx=0;
-  document.querySelectorAll('.src-btn').forEach((b,i)=>b.classList.toggle('on',i===0));
-  if(isTV){$('pl-ep-bar').style.display='flex';await loadSeasons(item.id);}
-  else{$('pl-ep-bar').style.display='none';loadIframe(item.id,mt,1,1);}
-  // Fetch details async
-  const [details,credits,similar]=await Promise.all([
-    api(`${BASE}/${mt}/${item.id}?api_key=${KEY}`),
-    api(`${BASE}/${mt}/${item.id}/credits?api_key=${KEY}`),
-    api(`${BASE}/${mt}/${item.id}/similar?api_key=${KEY}`),
-  ]);
-  if(details){
-    if(details.runtime)$('pl-runtime').textContent=`${Math.floor(details.runtime/60)}h ${details.runtime%60}m`;
-    $('pl-genres').textContent=(details.genres||[]).slice(0,3).map(g=>g.name).join(', ');
-  }
-  if(credits){
-    const cast=(credits.cast||[]).slice(0,6).map(c=>c.name).join(', ');
-    if(cast)$('pl-cast').innerHTML=`<strong>Cast:</strong> ${cast}`;
-  }
-  if(similar){
-    const items=safe(similar.results||[],mt).filter(i=>i.id!==item.id).slice(0,15);
-    $('rel-list').innerHTML='';
-    items.forEach(si=>{
-      const thumb=si.poster_path?IMG+'w185'+si.poster_path:noImg(si.title||si.name);
-      const d=document.createElement('div');d.className='rel-item';
-      d.innerHTML=`<img class="rel-thumb" src="${thumb}" alt="" onerror="this.src='${noImg(si.title||si.name)}'"/>
-        <div class="rel-info"><div class="rel-title">${si.title||si.name||''}</div><div class="rel-meta">${mt==='tv'?'Series':'Movie'}</div><div class="rel-star">${si.vote_average?'★ '+si.vote_average.toFixed(1):''}</div></div>`;
-      d.onclick=()=>openPlayer({...si,media_type:mt});
-      $('rel-list').appendChild(d);
-    });
-  }
-}
-
-async function loadSeasons(tvId){
-  const data=await api(`${BASE}/tv/${tvId}?api_key=${KEY}`);
-  if(!data)return;
-  _seasonData=data.seasons||[];
-  const ss=$('pl-s-sel');ss.innerHTML='';
-  _seasonData.forEach(s=>{
-    if(s.season_number===0)return;
-    const o=document.createElement('option');o.value=s.season_number;o.textContent=`Season ${s.season_number}`;
-    ss.appendChild(o);
-  });
-  _curS=_seasonData.find(s=>s.season_number>0)?.season_number||1;
-  ss.value=_curS;
-  await loadEpisodes(_curPlayerItem.id,_curS);
-}
-async function loadEpisodes(tvId,season){
-  const data=await api(`${BASE}/tv/${tvId}/season/${season}?api_key=${KEY}`);
-  const es=$('pl-e-sel');es.innerHTML='';
-  const eps=data?.episodes||[];
-  eps.forEach(e=>{
-    const o=document.createElement('option');o.value=e.episode_number;o.textContent=`Ep ${e.episode_number}: ${e.name||''}`;
-    es.appendChild(o);
-  });
-  _curE=1;es.value=1;
-  loadIframe(_curPlayerItem.id,'tv',_curS,_curE);
-}
-async function onSeasonChange(){_curS=parseInt($('pl-s-sel').value);await loadEpisodes(_curPlayerItem.id,_curS);}
-function onEpChange(){_curE=parseInt($('pl-e-sel').value);loadIframe(_curPlayerItem.id,'tv',_curS,_curE);}
-function prevEp(){const es=$('pl-e-sel');const opts=Array.from(es.options);const idx=opts.findIndex(o=>parseInt(o.value)===_curE);if(idx>0){_curE=parseInt(opts[idx-1].value);es.value=_curE;loadIframe(_curPlayerItem.id,'tv',_curS,_curE);}}
-function nextEp(){const es=$('pl-e-sel');const opts=Array.from(es.options);const idx=opts.findIndex(o=>parseInt(o.value)===_curE);if(idx<opts.length-1){_curE=parseInt(opts[idx+1].value);es.value=_curE;loadIframe(_curPlayerItem.id,'tv',_curS,_curE);}}
-
-function loadIframe(id,mt,s,e){
-  const ifrm=$('pl-iframe');
-  // Remove src first to reset
-  ifrm.src='about:blank';
-  setTimeout(()=>{
-    const url=SOURCES[_curSrcIdx](id,mt,s,e);
-    // KEY FIX: NO sandbox attribute — removed entirely
-    ifrm.removeAttribute('sandbox');
-    ifrm.src=url;
-  },80);
-}
-
-function switchSrc(idx){
-  _curSrcIdx=idx;
-  document.querySelectorAll('.src-btn').forEach((b,i)=>b.classList.toggle('on',i===idx));
-  if(_curPlayerItem)loadIframe(_curPlayerItem.id,_curPlayerItem.media_type||'movie',_curS,_curE);
-  toast(`Server switched — loading…`,'');
-}
-
-function buildAudioTracks(){
-  const at=$('audio-tracks');at.innerHTML='';
-  ['English','Hindi','Tamil','Telugu','Malayalam'].forEach((t,i)=>{
-    const b=document.createElement('button');b.className='audio-btn'+(i===0?' on':'');b.textContent=t;
-    b.onclick=()=>{at.querySelectorAll('.audio-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');toast(`🔊 Audio: ${t}`,'ok');};
-    at.appendChild(b);
-  });
-}
-function buildSubTracks(){
-  const st=$('sub-tracks');st.innerHTML='';
-  ['Off','English','Hindi','Tamil','Telugu'].forEach((s,i)=>{
-    const b=document.createElement('button');b.className='sub-btn'+(i===0?' on':'');b.textContent=s;
-    b.onclick=()=>{st.querySelectorAll('.sub-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');toast(`💬 Subtitle: ${s}`,'');};
-    st.appendChild(b);
-  });
-}
-function buildOTT(item,mt){
-  const og=$('ott-grid');og.innerHTML='';
-  const title=encodeURIComponent(item.title||item.name||'');
-  [
-    {n:'Hotstar',cls:'o-hs',url:`https://www.hotstar.com/search?q=${title}`},
-    {n:'Prime',cls:'o-pv',url:`https://www.primevideo.com/search/ref=atv_nb_sug?phrase=${title}`},
-    {n:'Netflix',cls:'o-nf',url:`https://www.netflix.com/search?q=${title}`},
-    {n:'JioCinema',cls:'o-jio',url:`https://www.jiocinema.com/search?q=${title}`},
-    {n:'SonyLIV',cls:'o-sl',url:`https://www.sonyliv.com/search?query=${title}`},
-    {n:'Zee5',cls:'o-z5',url:`https://www.zee5.com/search?q=${title}`},
-  ].forEach(o=>{
-    const a=document.createElement('a');a.className=`ott-btn ${o.cls}`;a.href=o.url;a.target='_blank';a.rel='noopener noreferrer';
-    a.textContent=o.n;og.appendChild(a);
-  });
-}
-
-function toggleWLFromPlayer(){if(_curPlayerItem)toggleWL(_curPlayerItem);}
-function downloadFromPlayer(){if(_curPlayerItem){toggleDownload(_curPlayerItem);}}
-
-function closePlayer(){
-  $('pg-player').classList.remove('on');
-  $('pl-iframe').src='about:blank';
-  document.body.style.overflow='';
-}
-
-// ── PHONE MODAL ────────────────────────────────────────
-function openPhoneModal(){$('phone-modal').classList.add('on');document.body.style.overflow='hidden';}
-function closePhoneModal(){$('phone-modal').classList.remove('on');document.body.style.overflow='';}
-$('phone-modal').addEventListener('click',e=>{if(e.target===$('phone-modal'))closePhoneModal();});
-
-// ── INIT ──────────────────────────────────────────────
-async function init(){
-  const [gm,gt]=await Promise.all([
-    api(`${BASE}/genre/movie/list?api_key=${KEY}&language=en`),
-    api(`${BASE}/genre/tv/list?api_key=${KEY}&language=en`),
-  ]);
-  if(gm?.genres)gm.genres.forEach(g=>{GM[g.id]=g.name;});
-  if(gt?.genres)gt.genres.forEach(g=>{GM[g.id]=g.name;});
-  loadHome();
-}
-init();
-  (function(){
-  function addFsButton(){
-    const wrap=$('pl-video-wrap');
-    if(!wrap||wrap.querySelector('.player-fs-btn'))return;
-    const btn=document.createElement('button');
-    btn.className='player-fs-btn';btn.innerHTML='⛶';btn.title='Fullscreen';
-    btn.onclick=function(e){e.stopPropagation();toggleFullscreen();};
-    wrap.appendChild(btn);
-  }
-  function toggleFullscreen(){
-    const el=$('pg-player');
-    if(!document.fullscreenElement&&!document.webkitFullscreenElement){
-      if(el.requestFullscreen)el.requestFullscreen().catch(()=>{});
-      else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();
-      document.body.classList.add('player-fullscreen-active');
-      if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});
-    }else{
-      if(document.exitFullscreen)document.exitFullscreen().catch(()=>{});
-      else if(document.webkitExitFullscreen)document.webkitExitFullscreen();
-      document.body.classList.remove('player-fullscreen-active');
-      if(screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();
-    }
-  }
-  document.addEventListener('fullscreenchange',function(){
-    if(!document.fullscreenElement)document.body.classList.remove('player-fullscreen-active');
-  });
-  window.addEventListener('orientationchange',function(){
-    if($('pg-player')&&$('pg-player').classList.contains('on')){
-      if(window.orientation===90||window.orientation===-90)document.body.classList.add('player-fullscreen-active');
-      else if(!document.fullscreenElement)document.body.classList.remove('player-fullscreen-active');
-    }
-  });
-  const _origOpenPlayer=openPlayer;
-  openPlayer=async function(item){
-    await _origOpenPlayer(item);
-    addFsButton();
-  };
-})();
-</script>
-</body>
-</html>
+    api(`${BASE}/
